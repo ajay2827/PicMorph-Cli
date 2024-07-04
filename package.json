@@ -1,0 +1,43 @@
+{
+  "name": "pic-morph",
+  "version": "1.0.1",
+  "description": "Ultimate Image CLI: Compress, Convert, Remove Backgrounds, and Apply Grayscale Filters.",
+  "main": "index.js",
+  "preferGlobal": true,
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ajay2827/PicMorph-Cli"
+  },
+  "author": "Ajay Singh ",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ajay2827/PicMorph-Cli"
+  },
+  "homepage": "https://github.com/ajay2827/PicMorph-Cli",
+  "dependencies": {
+    "axios": "^1.7.2",
+    "chalk": "^5.3.0",
+    "commander": "^11.1.0",
+    "dotenv": "^16.4.5",
+    "form-data": "^4.0.0",
+    "sharp": "^0.32.6"
+  },
+  "keywords": [
+    "image",
+    "remove-background",
+    "gray",
+    "compression",
+    "conversion",
+    "nodejs"
+  ],
+  "bin": {
+    "pic-morph": "./index.js"
+  },
+  "publishConfig": {
+    "tag": "latest"
+  }
+}
