@@ -43,8 +43,7 @@ export const outputFormatFor = (path) =>
   isHeic(path) ? 'jpeg' : formatFromExtension(path);
 
 // the extension an input file is written back with
-export const outputExtensionFor = (path) =>
-  isHeic(path) ? '.jpg' : extname(path);
+export const outputExtensionFor = (path) => (isHeic(path) ? '.jpg' : extname(path));
 
 async function loadHeic(path) {
   const { width, height, data } = await decodeHeic({ buffer: await readFile(path) });

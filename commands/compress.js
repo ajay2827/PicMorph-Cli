@@ -1,9 +1,5 @@
 import { Command } from 'commander';
-import {
-  formatFileSize,
-  parseFileSize,
-  resolveOutputPath,
-} from '../utils/files.js';
+import { formatFileSize, parseFileSize, resolveOutputPath } from '../utils/files.js';
 import {
   applyFormat,
   encodeToSize,

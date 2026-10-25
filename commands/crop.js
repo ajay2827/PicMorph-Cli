@@ -37,7 +37,10 @@ addOutputOptions(
   cropCommand
     .name('crop')
     .arguments('<inputs...>')
-    .option('-a, --aspect <ratio>', 'crop the largest area with this ratio, e.g. 16:9 or 1:1')
+    .option(
+      '-a, --aspect <ratio>',
+      'crop the largest area with this ratio, e.g. 16:9 or 1:1'
+    )
     .option('-w, --width <pixels>', 'width of the area to keep')
     .option('-h, --height <pixels>', 'height of the area to keep')
     .option('--left <pixels>', 'distance of the area from the left edge')
@@ -90,10 +93,7 @@ addOutputOptions(
           `crop area ${area.width}x${area.height} is bigger than the ${size.width}x${size.height} image`
         );
       }
-      if (
-        area.left + area.width > size.width ||
-        area.top + area.height > size.height
-      ) {
+      if (area.left + area.width > size.width || area.top + area.height > size.height) {
         throw new Error(
           `crop area ${area.width}x${area.height} at ${area.left},${area.top} doesn't fit in the ${size.width}x${size.height} image`
         );
@@ -101,7 +101,12 @@ addOutputOptions(
 
       if (options.smart) {
         // same size as the area, so this only crops, choosing the busiest region
-        image.resize({ width: area.width, height: area.height, fit: 'cover', position: 'attention' });
+        image.resize({
+          width: area.width,
+          height: area.height,
+          fit: 'cover',
+          position: 'attention',
+        });
       } else {
         image.extract(area);
       }

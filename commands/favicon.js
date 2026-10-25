@@ -47,7 +47,9 @@ faviconCommand
   .option('--background <color>', 'fill color behind the logo (transparent by default)')
   .option('--name <text>', 'site name for site.webmanifest', '')
   .option('--overwrite', 'replace icons that already exist in the folder')
-  .description('Create a full favicon set (ico, png, apple and android icons) from one image')
+  .description(
+    'Create a full favicon set (ico, png, apple and android icons) from one image'
+  )
   .action(async (inputImage, options) => {
     if (!existsSync(inputImage)) throw new Error(`File not found: ${inputImage}`);
     const outDir = resolve(options.outDir);
@@ -85,7 +87,10 @@ faviconCommand
       })),
       display: 'standalone',
     };
-    await writeFile(join(outDir, 'site.webmanifest'), JSON.stringify(manifest, null, 2) + '\n');
+    await writeFile(
+      join(outDir, 'site.webmanifest'),
+      JSON.stringify(manifest, null, 2) + '\n'
+    );
 
     logSuccess(`✔ Created ${files.length} files in ${displayPath(outDir)}`);
     logSuccess('\nAdd this to your <head>:');

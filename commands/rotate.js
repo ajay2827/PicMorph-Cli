@@ -18,7 +18,10 @@ addOutputOptions(
   rotateCommand
     .name('rotate')
     .arguments('<inputs...>')
-    .option('-a, --angle <degrees>', 'rotate clockwise by this many degrees (negative for anti-clockwise)')
+    .option(
+      '-a, --angle <degrees>',
+      'rotate clockwise by this many degrees (negative for anti-clockwise)'
+    )
     .option('-f, --flip <direction>', `mirror the image: ${FLIPS.join(' or ')}`)
     .option(
       '--background <color>',
@@ -30,7 +33,9 @@ addOutputOptions(
   .action(async (inputs, options) => {
     const angle = options.angle === undefined ? undefined : Number(options.angle);
     if (options.angle !== undefined && !Number.isFinite(angle)) {
-      throw new Error(`Invalid angle "${options.angle}". It should be a number of degrees.`);
+      throw new Error(
+        `Invalid angle "${options.angle}". It should be a number of degrees.`
+      );
     }
     if (options.flip !== undefined && !FLIPS.includes(options.flip)) {
       throw new Error(`Invalid --flip "${options.flip}". Use ${FLIPS.join(' or ')}.`);
@@ -62,7 +67,9 @@ addOutputOptions(
     logSuccess('  $ pic-morph rotate selfie.jpg --flip horizontal');
     logSuccess('\nNote:');
     logSuccess('  Corners are transparent by default; formats without');
-    logSuccess('  transparency (like jpg) show them as black unless --background is set.');
+    logSuccess(
+      '  transparency (like jpg) show them as black unless --background is set.'
+    );
   });
 
 export default rotateCommand;

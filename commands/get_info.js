@@ -41,7 +41,9 @@ function photoDetails(exifBuffer) {
 
   if (Photo.ExposureTime) {
     details.Exposure =
-      Photo.ExposureTime < 1 ? `1/${Math.round(1 / Photo.ExposureTime)}s` : `${Photo.ExposureTime}s`;
+      Photo.ExposureTime < 1
+        ? `1/${Math.round(1 / Photo.ExposureTime)}s`
+        : `${Photo.ExposureTime}s`;
   }
   if (Photo.FNumber) details.Aperture = `f/${Photo.FNumber}`;
   if (Photo.ISOSpeedRatings) details.ISO = Photo.ISOSpeedRatings;

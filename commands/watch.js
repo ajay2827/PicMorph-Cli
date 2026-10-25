@@ -17,8 +17,7 @@ import { logError, logSuccess, logWarn } from '../utils/colorFormatOutput.js';
 // files (copies, exports, downloads) are finished first
 const SETTLE_MS = 500;
 
-const isImage = (path) =>
-  IMAGE_EXTENSIONS.includes(path.split('.').pop().toLowerCase());
+const isImage = (path) => IMAGE_EXTENSIONS.includes(path.split('.').pop().toLowerCase());
 
 const isInside = (path, dir) => path === dir || path.startsWith(dir + sep);
 
@@ -32,7 +31,10 @@ watchCommand
     '-p, --preset <name>',
     `${Object.keys(PRESETS).join(', ')} (default web, or your saved setting)`
   )
-  .option('-t, --to <format>', `override the preset's format (${OUTPUT_FORMATS.join(', ')})`)
+  .option(
+    '-t, --to <format>',
+    `override the preset's format (${OUTPUT_FORMATS.join(', ')})`
+  )
   .option('-q, --quality <value>', "override the preset's quality (1-100)")
   .option('-s, --max-size <size>', 'keep each file under this size, e.g. 200kb')
   .option('-r, --recursive', 'also watch sub folders')
@@ -83,21 +85,25 @@ watchCommand
       }
     };
 
-    const watcher = watch(root, { recursive: Boolean(options.recursive) }, (_, filename) => {
-      if (!filename) return;
-      const path = join(root, filename.toString());
-      if (!isImage(path) || isInside(path, outDir)) return;
-      if (!options.recursive && relative(root, path).includes(sep)) return;
+    const watcher = watch(
+      root,
+      { recursive: Boolean(options.recursive) },
+      (_, filename) => {
+        if (!filename) return;
+        const path = join(root, filename.toString());
+        if (!isImage(path) || isInside(path, outDir)) return;
+        if (!options.recursive && relative(root, path).includes(sep)) return;
 
-      clearTimeout(timers.get(path));
-      timers.set(
-        path,
-        setTimeout(() => {
-          timers.delete(path);
-          queue = queue.then(() => processPath(path));
-        }, SETTLE_MS)
-      );
-    });
+        clearTimeout(timers.get(path));
+        timers.set(
+          path,
+          setTimeout(() => {
+            timers.delete(path);
+            queue = queue.then(() => processPath(path));
+          }, SETTLE_MS)
+        );
+      }
+    );
 
     logSuccess(
       `Watching ${displayPath(root)} → ${displayPath(outDir)} (preset ${presetName}). Press Ctrl+C to stop.`

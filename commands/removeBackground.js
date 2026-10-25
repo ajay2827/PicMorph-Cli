@@ -60,7 +60,7 @@ addOutputOptions(removeBackgroundCommand.name('remove-bg').arguments('<inputs...
           responseType: 'arraybuffer',
         });
       } catch (err) {
-        throw new Error(apiErrorMessage(err));
+        throw new Error(apiErrorMessage(err), { cause: err });
       }
 
       await saveImage(Buffer.from(response.data), output);

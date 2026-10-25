@@ -1,14 +1,6 @@
 import fg from 'fast-glob';
 import { existsSync, statSync } from 'fs';
-import {
-  basename,
-  dirname,
-  extname,
-  join,
-  relative,
-  resolve,
-  sep,
-} from 'path';
+import { basename, dirname, extname, join, relative, resolve, sep } from 'path';
 
 // image extensions picked up when a folder or glob is given
 export const IMAGE_EXTENSIONS = [
@@ -24,12 +16,10 @@ export const IMAGE_EXTENSIONS = [
   'heif',
 ];
 
-const isImage = (path) =>
-  IMAGE_EXTENSIONS.includes(extname(path).slice(1).toLowerCase());
+const isImage = (path) => IMAGE_EXTENSIONS.includes(extname(path).slice(1).toLowerCase());
 
 // fast-glob only understands forward slashes
-const toGlob = (path) =>
-  process.platform === 'win32' ? path.replace(/\\/g, '/') : path;
+const toGlob = (path) => (process.platform === 'win32' ? path.replace(/\\/g, '/') : path);
 
 function commonDir(paths) {
   return paths.map(dirname).reduce((common, dir) => {

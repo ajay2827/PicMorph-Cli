@@ -8,7 +8,8 @@ import {
 } from '../utils/config.js';
 import { logSuccess } from '../utils/colorFormatOutput.js';
 
-const mask = (value) => (value.length > 4 ? `${'*'.repeat(8)}${value.slice(-4)}` : '****');
+const mask = (value) =>
+  value.length > 4 ? `${'*'.repeat(8)}${value.slice(-4)}` : '****';
 
 const configCommand = new Command();
 
@@ -53,7 +54,8 @@ configCommand
       const config = loadConfig();
       for (const [key, { description, secret }] of Object.entries(CONFIG_KEYS)) {
         const value = config[key];
-        const shown = value === undefined ? '(not set)' : secret ? mask(String(value)) : value;
+        const shown =
+          value === undefined ? '(not set)' : secret ? mask(String(value)) : value;
         console.log(`${key} = ${shown}\n    ${description}`);
       }
       console.log(`\nSaved in ${configPath()}`);

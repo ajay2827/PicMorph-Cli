@@ -22,7 +22,9 @@ const escapeMarkup = (text) =>
 function parseNumber(value, name, min, max) {
   const number = Number(value);
   if (!Number.isFinite(number) || number < min || number > max) {
-    throw new Error(`Invalid ${name} "${value}". It should be between ${min} and ${max}.`);
+    throw new Error(
+      `Invalid ${name} "${value}". It should be between ${min} and ${max}.`
+    );
   }
   return number;
 }
@@ -51,7 +53,10 @@ addOutputOptions(
     .name('watermark')
     .arguments('<inputs...>')
     .option('--text <text>', 'text to stamp on the images')
-    .option('--image <file>', 'logo to stamp on the images (png with transparency works best)')
+    .option(
+      '--image <file>',
+      'logo to stamp on the images (png with transparency works best)'
+    )
     .option(
       '--position <name>',
       `where to put it: ${Object.keys(POSITIONS).join(', ')}`,
@@ -79,7 +84,7 @@ addOutputOptions(
     try {
       mark = await renderMark(options);
     } catch (err) {
-      throw new Error(`Could not create the watermark: ${err.message}`);
+      throw new Error(`Could not create the watermark: ${err.message}`, { cause: err });
     }
 
     await runBatch(inputs, options, async (file) => {
@@ -117,8 +122,12 @@ addOutputOptions(
   .on('--help', () => {
     logSuccess('\nExamples:');
     logSuccess('  $ pic-morph watermark photo.jpg --text "© Ajay Singh"');
-    logSuccess('  $ pic-morph watermark photos/ --image logo.png --position top-left --size 15');
-    logSuccess('  $ pic-morph watermark photo.jpg --text DRAFT --position center --size 60 --opacity 0.3');
+    logSuccess(
+      '  $ pic-morph watermark photos/ --image logo.png --position top-left --size 15'
+    );
+    logSuccess(
+      '  $ pic-morph watermark photo.jpg --text DRAFT --position center --size 60 --opacity 0.3'
+    );
   });
 
 export default watermarkCommand;

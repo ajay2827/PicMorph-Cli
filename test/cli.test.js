@@ -48,7 +48,9 @@ beforeEach(async () => {
   mkdirSync(at('photos', 'sub'), { recursive: true });
   await noise(400, 300).jpeg({ quality: 95 }).toFile(at('photos', 'a.jpg'));
   await noise(400, 300).png().toFile(at('photos', 'b.png'));
-  await noise(200, 100).jpeg().toFile(at('photos', 'sub', 'c.jpg'));
+  await noise(200, 100)
+    .jpeg()
+    .toFile(at('photos', 'sub', 'c.jpg'));
 });
 
 afterEach(() => rmSync(dir, { recursive: true, force: true }));
@@ -112,7 +114,10 @@ test('compress --max-size fits the target', () => {
 });
 
 test('metadata is removed unless --keep-metadata', async () => {
-  await noise(50, 50).jpeg().withExif({ IFD0: { Copyright: 'me' } }).toFile(at('exif.jpg'));
+  await noise(50, 50)
+    .jpeg()
+    .withExif({ IFD0: { Copyright: 'me' } })
+    .toFile(at('exif.jpg'));
   run('gray', 'exif.jpg');
   run('gray', 'exif.jpg', '--keep-metadata', '--suffix', 'kept');
   assert.equal((await meta('exif_bw.jpg')).exif, undefined);
@@ -277,7 +282,14 @@ test('rotate 90 swaps width and height, flip keeps size', async () => {
 test('watermark with text and with a logo', async () => {
   const text = run('watermark', 'photos/a.jpg', '--text', '© Me & Co <test>');
   assert.equal(text.code, 0);
-  const logo = run('watermark', 'photos/b.png', '--image', 'photos/sub/c.jpg', '--position', 'center');
+  const logo = run(
+    'watermark',
+    'photos/b.png',
+    '--image',
+    'photos/sub/c.jpg',
+    '--position',
+    'center'
+  );
   assert.equal(logo.code, 0);
   assert.equal((await meta('photos', 'a_watermarked.jpg')).width, 400);
   assert.equal(run('watermark', 'photos/a.jpg').code, 1);

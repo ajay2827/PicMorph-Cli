@@ -20,7 +20,9 @@ export const CONFIG_KEYS = {
     description: `default preset for optimize and watch (${PRESET_NAMES.join(', ')})`,
     parse: (value) => {
       if (!PRESET_NAMES.includes(value)) {
-        throw new Error(`Unknown preset "${value}". Use one of: ${PRESET_NAMES.join(', ')}`);
+        throw new Error(
+          `Unknown preset "${value}". Use one of: ${PRESET_NAMES.join(', ')}`
+        );
       }
       return value;
     },

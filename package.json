@@ -14,18 +14,22 @@
   "preferGlobal": true,
   "type": "module",
   "scripts": {
-    "test": "node --test"
+    "test": "node --test",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "check": "npm run lint && npm run format:check && npm test"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/ajay2827/PicMorph-Cli"
+    "url": "git+https://github.com/ajay2827/PicMorph-Cli.git"
   },
-  "author": "Ajay Singh ",
+  "author": "Ajay Singh",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/ajay2827/PicMorph-Cli"
+    "url": "https://github.com/ajay2827/PicMorph-Cli/issues"
   },
-  "homepage": "https://github.com/ajay2827/PicMorph-Cli",
+  "homepage": "https://github.com/ajay2827/PicMorph-Cli#readme",
   "dependencies": {
     "axios": "^1.7.2",
     "chalk": "^5.3.0",
@@ -56,5 +60,11 @@
   },
   "publishConfig": {
     "tag": "latest"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.13.0",
+    "globals": "^17.13.0",
+    "prettier": "^3.9.10"
   }
 }

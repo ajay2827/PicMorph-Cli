@@ -17,7 +17,10 @@ addOutputOptions(
       '-p, --preset <name>',
       `${Object.keys(PRESETS).join(', ')} (default web, or your saved setting)`
     )
-    .option('-t, --to <format>', `override the preset's format (${OUTPUT_FORMATS.join(', ')})`)
+    .option(
+      '-t, --to <format>',
+      `override the preset's format (${OUTPUT_FORMATS.join(', ')})`
+    )
     .option('-q, --quality <value>', "override the preset's quality (1-100)")
     .option('-s, --max-size <size>', 'keep each file under this size, e.g. 200kb')
 )

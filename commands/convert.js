@@ -54,7 +54,9 @@ addOutputOptions(
     }
 
     if (!options.to) {
-      throw new Error('Choose a format with --to, e.g. pic-morph convert photo.png --to webp');
+      throw new Error(
+        'Choose a format with --to, e.g. pic-morph convert photo.png --to webp'
+      );
     }
     const format = formatFromExtension(options.to);
     const ext = '.' + options.to.replace(/^\./, '').toLowerCase();
