@@ -3,7 +3,7 @@
 [![npm version](https://img.shields.io/npm/v/pic-morph.svg)](https://www.npmjs.com/package/pic-morph)
 [![CI](https://github.com/ajay2827/PicMorph-Cli/actions/workflows/ci.yml/badge.svg)](https://github.com/ajay2827/PicMorph-Cli/actions/workflows/ci.yml)
 [![node](https://img.shields.io/node/v/pic-morph.svg)](https://nodejs.org)
-[![license](https://img.shields.io/npm/l/pic-morph.svg)](LICENSE)
+[![license](https://img.shields.io/npm/l/pic-morph.svg)](https://github.com/ajay2827/PicMorph-Cli/blob/main/LICENSE)
 
 **The right image for the job, in one command.**
 Web-ready, email-ready or under any size limit. Process whole folders at once, watch a folder and forget about it, or cut out backgrounds for free on your own computer.
@@ -30,7 +30,7 @@ pic-morph optimize photo.png -p og      # for a link preview (WhatsApp, LinkedIn
 ✔ photo.png → photo_optimized.webp  1.91 MB → 71.26 KB (-96%), webp quality 75
 ```
 
-![A 1.91 MB portrait optimized to a 71 KB WebP, and a boat photo turned into a 1200×630 link preview, both looking the same as the originals](docs/images/optimize.jpg)
+![A 1.91 MB portrait optimized to a 71 KB WebP, and a boat photo turned into a 1200×630 link preview, both looking the same as the originals](https://raw.githubusercontent.com/ajay2827/PicMorph-Cli/main/docs/images/optimize.jpg)
 
 [See all presets →](#optimize)
 
@@ -46,7 +46,7 @@ pic-morph compress photo.jpg --max-size 200kb
 ✔ photo.jpg → photo_compressed.jpg  1.82 MB → 193.87 KB (-90%), quality 38
 ```
 
-![A 1.82 MB phone photo compressed to 194 KB, just under the 200 KB limit, with no visible difference](docs/images/max-size.jpg)
+![A 1.82 MB phone photo compressed to 194 KB, just under the 200 KB limit, with no visible difference](https://raw.githubusercontent.com/ajay2827/PicMorph-Cli/main/docs/images/max-size.jpg)
 
 [More about compress →](#compress)
 
@@ -64,7 +64,7 @@ Watching screenshots → optimized (preset web). Press Ctrl+C to stop.
 ✔ screenshots/screenshot-2.png → optimized/screenshot-2.webp  1.06 MB → 63.95 KB (-94%), webp quality 75
 ```
 
-![Three images dropped into a watched folder (1.91 MB, 1.06 MB and 113 KB) and the optimized WebP files that came out (71 KB, 64 KB and 47 KB)](docs/images/watch.jpg)
+![Three images dropped into a watched folder (1.91 MB, 1.06 MB and 113 KB) and the optimized WebP files that came out (71 KB, 64 KB and 47 KB)](https://raw.githubusercontent.com/ajay2827/PicMorph-Cli/main/docs/images/watch.jpg)
 
 [More about watch →](#watch)
 
@@ -77,7 +77,7 @@ pic-morph remove-bg photo.jpg
 pic-morph remove-bg product.jpg --background white --crop
 ```
 
-![Background removal results: a portrait and a boat cut out of busy sunset photos with the AI method, and a product with a soft shadow, a studio portrait and a green-screen shot cut out with the plain method](docs/images/remove-bg.jpg)
+![Background removal results: a portrait and a boat cut out of busy sunset photos with the AI method, and a product with a soft shadow, a studio portrait and a green-screen shot cut out with the plain method](https://raw.githubusercontent.com/ajay2827/PicMorph-Cli/main/docs/images/remove-bg.jpg)
 
 [More about remove-bg →](#remove-bg)
 
@@ -330,15 +330,15 @@ pic-morph config path                 # where settings are saved
 - Metadata is removed from outputs unless you pass `--keep-metadata`, and images are rotated upright.
 - Node.js 20.9 or newer is required.
 
-See the [changelog](CHANGELOG.md) for everything new.
+See the [changelog](https://github.com/ajay2827/PicMorph-Cli/blob/main/CHANGELOG.md) for everything new.
 
 ## Contributing
 
-Contributions are welcome! Please follow our [Contribution Guidelines](CONTRIBUTE.md) to get started.
+Contributions are welcome! Please follow our [Contribution Guidelines](https://github.com/ajay2827/PicMorph-Cli/blob/main/CONTRIBUTE.md) to get started.
 
 ## License
 
-This project is licensed under the ISC License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the ISC License - see the [LICENSE](https://github.com/ajay2827/PicMorph-Cli/blob/main/LICENSE) file for details.
 
 ## Contact
 
