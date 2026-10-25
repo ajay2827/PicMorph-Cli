@@ -12,7 +12,7 @@ addOutputOptions(blackAndWhiteCommand.name('gray').arguments('<inputs...>'))
   .action(async (inputs, options) => {
     await runBatch(inputs, options, async (file) => {
       const output = resolveOutputPath(file, { ...options, defaultSuffix: 'bw' });
-      await saveImage(openImage(file.path).grayscale(), output);
+      await saveImage(openImage(file.path, options).grayscale(), output);
       return { output };
     });
   })

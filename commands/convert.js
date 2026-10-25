@@ -43,7 +43,7 @@ addOutputOptions(
             `The format of <inputFile> and <outputFile> cannot be same. Both files have same format: ${extname(outputPath)}`
           );
         }
-        await saveImage(applyFormat(openImage(file.path), format, quality), outputPath);
+        await saveImage(applyFormat(openImage(file.path, options), format, quality), outputPath);
         return { output: outputPath };
       });
       return;
@@ -60,7 +60,7 @@ addOutputOptions(
         return { skipped: `already ${format}` };
       }
       const output = resolveOutputPath(file, { ...options, ext });
-      await saveImage(applyFormat(openImage(file.path), format, quality), output);
+      await saveImage(applyFormat(openImage(file.path, options), format, quality), output);
       return { output };
     });
   })

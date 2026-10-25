@@ -17,5 +17,9 @@ export function addOutputOptions(command) {
     .option(
       '--overwrite',
       'replace existing files, including the originals when names match'
+    )
+    .option(
+      '--keep-metadata',
+      'keep EXIF/GPS and other metadata (removed by default)'
     );
 }

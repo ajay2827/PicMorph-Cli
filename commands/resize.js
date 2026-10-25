@@ -45,7 +45,7 @@ addOutputOptions(
 
     await runBatch(inputs, options, async (file) => {
       const output = resolveOutputPath(file, { ...options, defaultSuffix: 'resized' });
-      const { data, info } = await openImage(file.path)
+      const { data, info } = await openImage(file.path, options)
         .resize({
           width,
           height,
