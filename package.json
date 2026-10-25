@@ -1,8 +1,16 @@
 {
   "name": "pic-morph",
-  "version": "1.0.1",
-  "description": "Ultimate Image CLI: Compress, Convert, Remove Backgrounds, and Apply Grayscale Filters.",
+  "version": "2.0.0",
+  "description": "Ultimate Image CLI: Compress, Resize, Convert, Remove Backgrounds, and Apply Grayscale Filters.",
   "main": "index.js",
+  "files": [
+    "index.js",
+    "commands/",
+    "utils/"
+  ],
+  "engines": {
+    "node": ">=18.17.0"
+  },
   "preferGlobal": true,
   "type": "module",
   "scripts": {
@@ -33,7 +41,13 @@
     "gray",
     "compression",
     "conversion",
-    "nodejs"
+    "nodejs",
+    "resize",
+    "webp",
+    "avif",
+    "batch",
+    "cli",
+    "optimize"
   ],
   "bin": {
     "pic-morph": "./index.js"
