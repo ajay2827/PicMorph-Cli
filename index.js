@@ -1,12 +1,16 @@
 #!/usr/bin/env node
 
 import { Command } from 'commander';
+import { createRequire } from 'module';
 const commander = new Command();
 import compressCommand from './commands/compress.js';
 import convertCommand from './commands/convert.js';
 import infoCommand from './commands/get_info.js';
 import blackAndWhiteCommand from './commands/gray.js';
 import removeBackgroundCommand from './commands/removeBackground.js';
+import { logError } from './utils/colorFormatOutput.js';
+
+const { version } = createRequire(import.meta.url)('./package.json');
 
 async function picMorphCmd() {
   // define basic info of the package
@@ -15,7 +19,8 @@ async function picMorphCmd() {
     .description(
       'Ultimate Image CLI: Compress, Convert, Remove Backgrounds, and Apply Grayscale Filters.'
     )
-    .version('1.0.1');
+    .version(version)
+    .showHelpAfterError();
 
   // add imported module commands
   commander.addCommand(compressCommand);
@@ -28,7 +33,8 @@ async function picMorphCmd() {
     // Parse command-line arguments
     await commander.parseAsync(process.argv);
   } catch (err) {
-    console.error(err);
+    logError(err.message);
+    process.exitCode = 1;
   }
 }
 
