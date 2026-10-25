@@ -6,7 +6,7 @@
 [![license](https://img.shields.io/npm/l/pic-morph.svg)](LICENSE)
 
 **The right image for the job, in one command.**
-Web-ready, email-ready or under any size limit. Process whole folders at once, or watch a folder and forget about it.
+Web-ready, email-ready or under any size limit. Process whole folders at once, watch a folder and forget about it, or cut out backgrounds for free on your own computer.
 
 ```sh
 npm install -g pic-morph
@@ -30,6 +30,8 @@ pic-morph optimize photo.png -p og      # for a link preview (WhatsApp, LinkedIn
 ✔ photo.png → photo_optimized.webp  1.91 MB → 71.26 KB (-96%), webp quality 75
 ```
 
+![A 1.91 MB portrait optimized to a 71 KB WebP, and a boat photo turned into a 1200×630 link preview, both looking the same as the originals](docs/images/optimize.jpg)
+
 [See all presets →](#optimize)
 
 ### 📏 Fit any upload limit, with the best quality possible
@@ -43,6 +45,8 @@ pic-morph compress photo.jpg --max-size 200kb
 ```
 ✔ photo.jpg → photo_compressed.jpg  1.82 MB → 193.87 KB (-90%), quality 38
 ```
+
+![A 1.82 MB phone photo compressed to 194 KB, just under the 200 KB limit, with no visible difference](docs/images/max-size.jpg)
 
 [More about compress →](#compress)
 
@@ -60,7 +64,22 @@ Watching screenshots → optimized (preset web). Press Ctrl+C to stop.
 ✔ screenshots/screenshot-2.png → optimized/screenshot-2.webp  1.06 MB → 63.95 KB (-94%), webp quality 75
 ```
 
+![Three images dropped into a watched folder (1.91 MB, 1.06 MB and 113 KB) and the optimized WebP files that came out (71 KB, 64 KB and 47 KB)](docs/images/watch.jpg)
+
 [More about watch →](#watch)
+
+### ✂️ Remove backgrounds on your computer, for free
+
+No account, no upload, no API key. pic-morph picks the method for each photo: its own fast algorithm for plain and studio backgrounds, and an AI model for busy ones like people outdoors (after a one-time `pic-morph ai setup`).
+
+```sh
+pic-morph remove-bg photo.jpg
+pic-morph remove-bg product.jpg --background white --crop
+```
+
+![Background removal results: a portrait and a boat cut out of busy sunset photos with the AI method, and a product with a soft shadow, a studio portrait and a green-screen shot cut out with the plain method](docs/images/remove-bg.jpg)
+
+[More about remove-bg →](#remove-bg)
 
 ## Built to be safe to use
 
