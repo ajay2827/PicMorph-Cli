@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { Command } from 'commander';
+import sharp from 'sharp';
 import { createRequire } from 'module';
 const commander = new Command();
 import compressCommand from './commands/compress.js';
@@ -21,6 +22,11 @@ import aiCommand from './commands/ai.js';
 import { logError } from './utils/colorFormatOutput.js';
 
 const { version } = createRequire(import.meta.url)('./package.json');
+
+// sharp keeps files it has read open in a cache; Windows won't let an open
+// file be replaced, which breaks --overwrite there. A CLI run gains nothing
+// from the cache anyway.
+sharp.cache(false);
 
 async function picMorphCmd() {
   // define basic info of the package

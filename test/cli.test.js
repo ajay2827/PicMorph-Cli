@@ -16,6 +16,9 @@ import { join } from 'path';
 import { fileURLToPath } from 'url';
 import sharp from 'sharp';
 
+// don't keep test images open, or Windows can't delete the temp folders
+sharp.cache(false);
+
 const CLI = fileURLToPath(new URL('../index.js', import.meta.url));
 const FIXTURE_HEIC = fileURLToPath(new URL('./fixtures/photo.heic', import.meta.url));
 let dir;
