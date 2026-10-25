@@ -8,6 +8,7 @@ import convertCommand from './commands/convert.js';
 import infoCommand from './commands/get_info.js';
 import blackAndWhiteCommand from './commands/gray.js';
 import removeBackgroundCommand from './commands/removeBackground.js';
+import resizeCommand from './commands/resize.js';
 import { logError } from './utils/colorFormatOutput.js';
 
 const { version } = createRequire(import.meta.url)('./package.json');
@@ -17,7 +18,7 @@ async function picMorphCmd() {
   commander
     .name('pic-morph')
     .description(
-      'Ultimate Image CLI: Compress, Convert, Remove Backgrounds, and Apply Grayscale Filters.'
+      'Ultimate Image CLI: Compress, Resize, Convert, Remove Backgrounds, and Apply Grayscale Filters.'
     )
     .version(version)
     .showHelpAfterError();
@@ -28,6 +29,7 @@ async function picMorphCmd() {
   commander.addCommand(infoCommand);
   commander.addCommand(blackAndWhiteCommand);
   commander.addCommand(removeBackgroundCommand);
+  commander.addCommand(resizeCommand);
 
   try {
     // Parse command-line arguments
