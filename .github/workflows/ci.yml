@@ -32,6 +32,10 @@ jobs:
           node-version: ${{ matrix.node }}
           cache: npm
       - run: npm ci
-      - run: npm test
+      - name: Run tests
+        run: >-
+          node --test
+          --test-reporter=spec --test-reporter-destination=stdout
+          --test-reporter=./test/github-reporter.js --test-reporter-destination=stdout
       - name: Check the CLI starts
         run: node index.js --version
