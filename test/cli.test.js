@@ -365,6 +365,10 @@ test('watch optimizes new images and stops cleanly', async () => {
 
   const exited = new Promise((done) => child.on('exit', done));
   child.kill('SIGTERM');
-  assert.equal(await exited, 0);
-  assert.match(out, /Stopped watching/);
+  const code = await exited;
+  // Windows has no signals to catch; the process is just ended
+  if (process.platform !== 'win32') {
+    assert.equal(code, 0);
+    assert.match(out, /Stopped watching/);
+  }
 });
