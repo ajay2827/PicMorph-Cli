@@ -1,6 +1,7 @@
 import { test, beforeEach, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn, spawnSync } from 'child_process';
+import { randomBytes } from 'crypto';
 import {
   copyFileSync,
   existsSync,
@@ -526,4 +527,23 @@ test('watermark text has a shadow unless --no-shadow', async () => {
   // white text on white is invisible without a shadow, visible with one
   assert.ok((await darkest('white_watermarked.jpg')) < 140);
   assert.ok((await darkest('white_plain.jpg')) > 200);
+});
+
+test('compress --max-size never makes a small file bigger', () => {
+  const before = statSync(at('photos', 'sub', 'c.jpg')).size;
+  const { code, out } = run('compress', 'photos/sub/c.jpg', '--max-size', '10mb');
+  assert.equal(code, 0);
+  assert.ok(statSync(at('photos', 'sub', 'c_compressed.jpg')).size <= before);
+  assert.match(out, /already under the limit/);
+});
+
+test('compress --max-size warns when quality gets very low', async () => {
+  // random pixels barely compress, so a small limit forces a very low quality
+  await sharp(randomBytes(200 * 200 * 3), {
+    raw: { width: 200, height: 200, channels: 3 },
+  })
+    .png()
+    .toFile(at('random.png'));
+  const { out } = run('compress', 'random.png', '--max-size', '30kb');
+  assert.match(out, /may look rough|could not get under/);
 });

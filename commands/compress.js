@@ -1,4 +1,5 @@
 import { Command } from 'commander';
+import { statSync } from 'fs';
 import { formatFileSize, parseFileSize, resolveOutputPath } from '../utils/files.js';
 import {
   applyFormat,
@@ -17,6 +18,8 @@ import { logSuccess } from '../utils/colorFormatOutput.js';
 const DEFAULT_QUALITY = 60;
 // highest quality tried when searching for a --max-size fit
 const MAX_SIZE_QUALITY_CAP = 90;
+// below this, warn that the result may look rough
+const LOW_QUALITY = 20;
 
 const compressCommand = new Command();
 
@@ -54,19 +57,33 @@ addOutputOptions(
         return { output, note: `quality ${used}` };
       }
 
+      // a file already under the limit should never come out bigger
+      const originalSize = statSync(file.path).size;
+      const limit = Math.min(maxBytes, originalSize);
       const result = await encodeToSize(
         () => openImage(file.path, options),
         format,
-        maxBytes,
+        limit,
         quality ?? MAX_SIZE_QUALITY_CAP
       );
       await saveImage(result.buffer, output);
+
+      let warning;
+      if (result.tooBig) {
+        warning = `could not get under ${formatFileSize(limit)}; try resizing the image first`;
+      } else if (result.quality < LOW_QUALITY && limit === maxBytes) {
+        warning =
+          `quality had to drop to ${result.quality} and may look rough; ` +
+          (format === 'png'
+            ? 'png suits graphics, not photos: `pic-morph optimize <file> -p email --max-size <size>` saves a jpg instead'
+            : 'resizing the image first keeps more detail');
+      }
       return {
         output,
-        note: `quality ${result.quality}`,
-        warning: result.tooBig
-          ? `could not get under ${formatFileSize(maxBytes)}; try resizing the image first`
-          : undefined,
+        note:
+          `quality ${result.quality}` +
+          (limit < maxBytes ? ', already under the limit so kept no bigger' : ''),
+        warning,
       };
     });
   })
