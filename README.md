@@ -5,11 +5,8 @@
 [![node](https://img.shields.io/node/v/pic-morph.svg)](https://nodejs.org)
 [![license](https://img.shields.io/npm/l/pic-morph.svg)](LICENSE)
 
-An npm package to manipulate images using the command line interface: optimize, compress, resize, convert, crop, rotate, watermark, make thumbnails and favicons, remove backgrounds and read photo details.
-
-## Installation
-
-To install pic-morph globally, use the following command:
+**The right image for the job, in one command.**
+Web-ready, email-ready or under any size limit. Process whole folders at once, or watch a folder and forget about it.
 
 ```sh
 npm install -g pic-morph
@@ -17,23 +14,65 @@ npm install -g pic-morph
 
 Requires Node.js 20.9 or newer.
 
-## Quick start
+## Why pic-morph
+
+### 🎯 Say where the image is going, get the right file
+
+Phone photos are huge. A website, an email and a link preview each need a different size, format and compression, and most people don't know which. With `optimize`, you name the destination and pic-morph picks the rest.
 
 ```sh
-pic-morph optimize photos/ -o web/               # web-ready WebP images in one step
-pic-morph compress photo.jpg --max-size 200kb    # fit an upload limit
-pic-morph resize photos/ -r -w 1920 -o resized/  # a whole folder, sub folders included
-pic-morph convert IMG_0042.heic --to jpg         # iPhone photo to jpg
+pic-morph optimize photo.png -p web     # for a website
+pic-morph optimize photo.png -p email   # to attach to an email
+pic-morph optimize photo.png -p og      # for a link preview (WhatsApp, LinkedIn, Slack)
+```
+
+```
+✔ photo.png → photo_optimized.webp  1.91 MB → 71.26 KB (-96%), webp quality 75
+```
+
+[See all presets →](#optimize)
+
+### 📏 Fit any upload limit, with the best quality possible
+
+*"Photo must be less than 200 KB."* Job applications, visa forms, exam portals and CMS uploads all ask for it. Instead of compressing again and again on a random website, give pic-morph the limit, and it finds the highest quality that still fits.
+
+```sh
+pic-morph compress photo.jpg --max-size 200kb
+```
+
+```
+✔ photo.jpg → photo_compressed.jpg  1.82 MB → 193.87 KB (-90%), quality 38
+```
+
+[More about compress →](#compress)
+
+### 👀 Watch a folder and forget about it
+
+Screenshots, phone exports, upload folders: images that keep arriving. Start `watch` once, and every new image dropped into the folder is optimized automatically.
+
+```sh
 pic-morph watch ~/Desktop/screenshots -o ~/Desktop/optimized
 ```
 
-## Features
+```
+Watching screenshots → optimized (preset web). Press Ctrl+C to stop.
+✔ screenshots/screenshot-1.png → optimized/screenshot-1.webp  1.91 MB → 71.26 KB (-96%), webp quality 75
+✔ screenshots/screenshot-2.png → optimized/screenshot-2.webp  1.06 MB → 63.95 KB (-94%), webp quality 75
+```
 
-- Works on one file, many files, folders or glob patterns, with progress and before/after sizes.
-- Reads JPEG, PNG, WebP, AVIF, TIFF, GIF and iPhone HEIC photos.
-- Photos are rotated upright from their EXIF orientation, so phone pictures don't come out sideways.
-- Metadata such as GPS location is removed unless you ask to keep it.
-- Exits with code 1 if anything fails, so it can be used in scripts and CI.
+[More about watch →](#watch)
+
+## Built to be safe to use
+
+- **Whole folders at once:** files, folders (`-r` for sub folders) and glob patterns, with progress and before/after sizes.
+- **Never overwrites your files** unless you pass `--overwrite`.
+- **Private by default:** GPS location and camera details are removed from outputs unless you pass `--keep-metadata`.
+- **iPhone photos just work:** HEIC photos are read by every command, and sideways phone photos are rotated upright.
+- **Script friendly:** exits with code 1 if anything fails, so it can be used in scripts and CI.
+
+## Everything else it does
+
+Resize, convert (JPEG, PNG, WebP, AVIF, TIFF, GIF), crop (including smart crop), rotate and flip, watermark with text or a logo, thumbnails, grayscale, background removal, full favicon sets and photo details (camera, date, GPS). See all commands below.
 
 ## Commands
 
