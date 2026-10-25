@@ -56,7 +56,7 @@
     "optimize"
   ],
   "bin": {
-    "pic-morph": "./index.js"
+    "pic-morph": "index.js"
   },
   "publishConfig": {
     "tag": "latest"
