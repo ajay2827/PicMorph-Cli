@@ -10,7 +10,7 @@ const logError = (message) => {
   console.error(colorize.red(message));
 };
 
-const isPath = (str) => /[\\]/.test(str); // Search for '\' in the string
+const isPath = (str) => /[\\/]/.test(str); // Search for '\' or '/' in the string
 
 const logFilePath = (filePath) => {
     const words = filePath.split(/\s+/); // Split the string into words based on spaces

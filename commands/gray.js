@@ -1,6 +1,5 @@
 import { Command } from 'commander';
 import sharp from 'sharp';
-import { resolve, dirname } from 'path';
 import { generateUniqueFilename } from '../utils/generateFileName.js';
 import {
   logError,
@@ -17,11 +16,10 @@ blackAndWhiteCommand
   .action(async (inputFile) => {
     try {
       // create output file name
-      const outputFileName = generateUniqueFilename(inputFile, 'bw');
-      const outputPath = resolve(dirname(inputFile), outputFileName);
+      const outputPath = generateUniqueFilename(inputFile, 'bw');
 
       // convert input file to black and white
-      await sharp(inputFile).grayscale().toFile(outputFileName);
+      await sharp(inputFile).grayscale().toFile(outputPath);
       logSuccess('Image converted to black and white.');
       logFilePath(`See here: ${outputPath}`);
     } catch (err) {

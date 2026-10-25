@@ -39,10 +39,10 @@ infoCommand
         // createdWhen: "Information not available",
         // geoCoordinates: "Information not available",
       };
-      logSuccess('Image information\n', imageInfo);
+      logSuccess('Image information');
       console.log(imageInfo);
     } catch (err) {
-      logError(err);
+      logError(err.message);
     }
   })
 

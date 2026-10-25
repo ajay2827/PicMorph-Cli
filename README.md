@@ -45,6 +45,10 @@ pic-morph convert <input_file.extension> <output_file.extension>
 
 Remove the background from an image.
 
+This command uses the [remove.bg](https://www.remove.bg/api) API. Get a free API key and set it as an environment variable:
+
+export REMOVE_BG_API_KEY=your_api_key
+
 pic-morph remove-bg <input_file>
 
 - Example:

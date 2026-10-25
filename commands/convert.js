@@ -1,6 +1,6 @@
 import { Command } from 'commander';
 import sharp from 'sharp';
-import { extname, resolve, dirname } from 'path';
+import { extname } from 'path';
 import { generateUniqueFilename } from '../utils/generateFileName.js';
 import {
   logError,
@@ -28,11 +28,10 @@ convertCommand
       }
 
       // create output file absolute path
-      const outputFileName = generateUniqueFilename(outputFile);
-      const outputPath = resolve(dirname(inputFile), outputFileName);
+      const outputPath = generateUniqueFilename(outputFile);
 
       // convert file format
-      const info = await sharp(inputFile).toFile(outputFileName);
+      await sharp(inputFile).toFile(outputPath);
       logSuccess(
         `Image converted from ${inputFormat} to ${outputFormat} format.`
       );

@@ -1,6 +1,5 @@
 import { Command } from 'commander';
 import fs from 'fs';
-import { resolve, dirname } from 'path';
 import axios from 'axios';
 import FormData from 'form-data';
 import { generateUniqueFilename } from '../utils/generateFileName.js';
@@ -12,7 +11,7 @@ import {
 import dotenv from 'dotenv';
 dotenv.config();
 
-const API_KEY = 'GcKxuCeaSzshPVSepnDKWrxi';
+const API_KEY = process.env.REMOVE_BG_API_KEY;
 
 const removeBackgroundCommand = new Command();
 
@@ -22,8 +21,13 @@ removeBackgroundCommand
   .description('Remove the background from an image')
   .action(async (inputFile) => {
     try {
-      const outputFileName = generateUniqueFilename(inputFile, 'no-bg');
-      const outputPath = resolve(dirname(inputFile), outputFileName);
+      if (!API_KEY) {
+        throw new Error(
+          'REMOVE_BG_API_KEY is not set. Get a key from https://www.remove.bg/api and set it in your environment or a .env file.'
+        );
+      }
+
+      const outputPath = generateUniqueFilename(inputFile, 'no-bg');
 
       const formData = new FormData();
       formData.append('image_file', fs.createReadStream(inputFile));
