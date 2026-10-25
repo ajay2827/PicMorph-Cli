@@ -522,7 +522,8 @@ test('watermark text has a shadow unless --no-shadow', async () => {
       .greyscale()
       .raw()
       .toBuffer({ resolveWithObject: true });
-    return Math.min(...data);
+    // a loop, not Math.min(...data): spreading 120k values overflows the stack on Node < 26
+    return data.reduce((min, value) => Math.min(min, value), 255);
   };
   // white text on white is invisible without a shadow, visible with one
   assert.ok((await darkest('white_watermarked.jpg')) < 140);
