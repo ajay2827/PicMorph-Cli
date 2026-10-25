@@ -1,6 +1,11 @@
 import { Command } from 'commander';
 import { resolveOutputPath } from '../utils/files.js';
-import { openImage, saveImage } from '../utils/image.js';
+import {
+  matchInputFormat,
+  openImage,
+  outputExtensionFor,
+  saveImage,
+} from '../utils/image.js';
 import { runBatch } from '../utils/batch.js';
 import { addOutputOptions } from '../utils/options.js';
 import { logSuccess } from '../utils/colorFormatOutput.js';
@@ -11,8 +16,13 @@ addOutputOptions(blackAndWhiteCommand.name('gray').arguments('<inputs...>'))
   .description('Convert images to black and white')
   .action(async (inputs, options) => {
     await runBatch(inputs, options, async (file) => {
-      const output = resolveOutputPath(file, { ...options, defaultSuffix: 'bw' });
-      await saveImage(openImage(file.path, options).grayscale(), output);
+      const output = resolveOutputPath(file, {
+        ...options,
+        defaultSuffix: 'bw',
+        ext: outputExtensionFor(file.path),
+      });
+      const image = (await openImage(file.path, options)).grayscale();
+      await saveImage(matchInputFormat(image, file.path), output);
       return { output };
     });
   })

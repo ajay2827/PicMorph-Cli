@@ -11,7 +11,18 @@ import {
 } from 'path';
 
 // image extensions picked up when a folder or glob is given
-export const IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp', 'avif', 'tif', 'tiff', 'gif'];
+export const IMAGE_EXTENSIONS = [
+  'jpg',
+  'jpeg',
+  'png',
+  'webp',
+  'avif',
+  'tif',
+  'tiff',
+  'gif',
+  'heic',
+  'heif',
+];
 
 const isImage = (path) =>
   IMAGE_EXTENSIONS.includes(extname(path).slice(1).toLowerCase());

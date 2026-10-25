@@ -9,6 +9,7 @@ import infoCommand from './commands/get_info.js';
 import blackAndWhiteCommand from './commands/gray.js';
 import removeBackgroundCommand from './commands/removeBackground.js';
 import resizeCommand from './commands/resize.js';
+import configCommand from './commands/config.js';
 import { logError } from './utils/colorFormatOutput.js';
 
 const { version } = createRequire(import.meta.url)('./package.json');
@@ -30,6 +31,7 @@ async function picMorphCmd() {
   commander.addCommand(blackAndWhiteCommand);
   commander.addCommand(removeBackgroundCommand);
   commander.addCommand(resizeCommand);
+  commander.addCommand(configCommand);
 
   try {
     // Parse command-line arguments

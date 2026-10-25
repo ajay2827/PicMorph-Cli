@@ -1,20 +1,17 @@
 import { Command } from 'commander';
 import { resolveOutputPath } from '../utils/files.js';
-import { openImage, saveImage } from '../utils/image.js';
+import {
+  matchInputFormat,
+  openImage,
+  outputExtensionFor,
+  parsePositiveInt,
+  saveImage,
+} from '../utils/image.js';
 import { runBatch } from '../utils/batch.js';
 import { addOutputOptions } from '../utils/options.js';
 import { logSuccess } from '../utils/colorFormatOutput.js';
 
 const FITS = ['cover', 'contain', 'fill', 'inside', 'outside'];
-
-function parseDimension(value, name) {
-  if (value === undefined) return undefined;
-  const size = Number(value);
-  if (!Number.isInteger(size) || size < 1) {
-    throw new Error(`Invalid ${name} "${value}". It should be a whole number of pixels.`);
-  }
-  return size;
-}
 
 const resizeCommand = new Command();
 
@@ -34,8 +31,8 @@ addOutputOptions(
 )
   .description('Resize images')
   .action(async (inputs, options) => {
-    const width = parseDimension(options.width, 'width');
-    const height = parseDimension(options.height, 'height');
+    const width = parsePositiveInt(options.width, 'width');
+    const height = parsePositiveInt(options.height, 'height');
     if (!width && !height) {
       throw new Error('Give a --width, a --height, or both.');
     }
@@ -44,15 +41,20 @@ addOutputOptions(
     }
 
     await runBatch(inputs, options, async (file) => {
-      const output = resolveOutputPath(file, { ...options, defaultSuffix: 'resized' });
-      const { data, info } = await openImage(file.path, options)
-        .resize({
-          width,
-          height,
-          fit: options.fit,
-          withoutEnlargement: !options.enlarge,
-        })
-        .toBuffer({ resolveWithObject: true });
+      const output = resolveOutputPath(file, {
+        ...options,
+        defaultSuffix: 'resized',
+        ext: outputExtensionFor(file.path),
+      });
+      const image = (await openImage(file.path, options)).resize({
+        width,
+        height,
+        fit: options.fit,
+        withoutEnlargement: !options.enlarge,
+      });
+      const { data, info } = await matchInputFormat(image, file.path).toBuffer({
+        resolveWithObject: true,
+      });
       await saveImage(data, output);
       return { output, note: `${info.width}x${info.height}` };
     });

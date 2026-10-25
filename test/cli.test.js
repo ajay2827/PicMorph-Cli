@@ -21,7 +21,12 @@ function run(...args) {
   const result = spawnSync(process.execPath, [CLI, ...args], {
     cwd: dir,
     encoding: 'utf8',
-    env: { ...process.env, FORCE_COLOR: '0', REMOVE_BG_API_KEY: '' },
+    env: {
+      ...process.env,
+      FORCE_COLOR: '0',
+      REMOVE_BG_API_KEY: '',
+      PIC_MORPH_CONFIG: join(dir, 'config.json'),
+    },
   });
   return { code: result.status, out: result.stdout + result.stderr };
 }
@@ -158,5 +163,5 @@ test('info --json prints parseable output', () => {
 test('remove-bg without an API key fails clearly', () => {
   const { code, out } = run('remove-bg', 'photos/a.jpg');
   assert.equal(code, 1);
-  assert.match(out, /REMOVE_BG_API_KEY is not set/);
+  assert.match(out, /No remove.bg API key/);
 });

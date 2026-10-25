@@ -4,6 +4,7 @@ import axios from 'axios';
 import FormData from 'form-data';
 import { resolveOutputPath } from '../utils/files.js';
 import { saveImage } from '../utils/image.js';
+import { loadConfig } from '../utils/config.js';
 import { runBatch } from '../utils/batch.js';
 import { addOutputOptions } from '../utils/options.js';
 import { logSuccess } from '../utils/colorFormatOutput.js';
@@ -26,10 +27,10 @@ const removeBackgroundCommand = new Command();
 addOutputOptions(removeBackgroundCommand.name('remove-bg').arguments('<inputs...>'))
   .description('Remove the background from images (uses the remove.bg API)')
   .action(async (inputs, options) => {
-    const API_KEY = process.env.REMOVE_BG_API_KEY;
+    const API_KEY = process.env.REMOVE_BG_API_KEY || loadConfig().removeBgKey;
     if (!API_KEY) {
       throw new Error(
-        'REMOVE_BG_API_KEY is not set. Get a key from https://www.remove.bg/api and set it in your environment or a .env file.'
+        'No remove.bg API key. Get one from https://www.remove.bg/api and save it with `pic-morph config set removeBgKey <key>` (or set REMOVE_BG_API_KEY).'
       );
     }
 

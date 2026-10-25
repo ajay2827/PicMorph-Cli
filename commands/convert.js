@@ -6,6 +6,7 @@ import {
   OUTPUT_FORMATS,
   applyFormat,
   formatFromExtension,
+  isHeic,
   openImage,
   parseQuality,
   saveImage,
@@ -38,12 +39,15 @@ addOutputOptions(
       const outputPath = resolve(inputs[1]);
       const format = formatFromExtension(outputPath);
       await runBatch([inputs[0]], options, async (file) => {
-        if (formatFromExtension(file.path) === format) {
+        if (!isHeic(file.path) && formatFromExtension(file.path) === format) {
           throw new Error(
             `The format of <inputFile> and <outputFile> cannot be same. Both files have same format: ${extname(outputPath)}`
           );
         }
-        await saveImage(applyFormat(openImage(file.path, options), format, quality), outputPath);
+        await saveImage(
+          applyFormat(await openImage(file.path, options), format, quality),
+          outputPath
+        );
         return { output: outputPath };
       });
       return;
@@ -56,11 +60,14 @@ addOutputOptions(
     const ext = '.' + options.to.replace(/^\./, '').toLowerCase();
 
     await runBatch(inputs, options, async (file) => {
-      if (formatFromExtension(file.path) === format) {
+      if (!isHeic(file.path) && formatFromExtension(file.path) === format) {
         return { skipped: `already ${format}` };
       }
       const output = resolveOutputPath(file, { ...options, ext });
-      await saveImage(applyFormat(openImage(file.path, options), format, quality), output);
+      await saveImage(
+        applyFormat(await openImage(file.path, options), format, quality),
+        output
+      );
       return { output };
     });
   })

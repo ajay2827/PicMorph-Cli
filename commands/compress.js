@@ -6,11 +6,14 @@ import {
 } from '../utils/files.js';
 import {
   applyFormat,
-  formatFromExtension,
+  encodeToSize,
   openImage,
+  outputExtensionFor,
+  outputFormatFor,
   parseQuality,
   saveImage,
 } from '../utils/image.js';
+import { loadConfig } from '../utils/config.js';
 import { runBatch } from '../utils/batch.js';
 import { addOutputOptions } from '../utils/options.js';
 import { logSuccess } from '../utils/colorFormatOutput.js';
@@ -18,34 +21,6 @@ import { logSuccess } from '../utils/colorFormatOutput.js';
 const DEFAULT_QUALITY = 60;
 // highest quality tried when searching for a --max-size fit
 const MAX_SIZE_QUALITY_CAP = 90;
-
-const encode = (file, format, quality, options) =>
-  applyFormat(openImage(file.path, options), format, quality).toBuffer();
-
-// binary search for the highest quality whose output fits in maxBytes
-async function compressToSize(file, format, maxBytes, highestQuality, options) {
-  let low = 1;
-  let high = highestQuality;
-  let best = null;
-
-  while (low <= high) {
-    const quality = Math.floor((low + high) / 2);
-    const buffer = await encode(file, format, quality, options);
-    if (buffer.length <= maxBytes) {
-      best = { buffer, quality };
-      low = quality + 1;
-    } else {
-      high = quality - 1;
-    }
-  }
-
-  if (best) return best;
-  return {
-    buffer: await encode(file, format, 1, options),
-    quality: 1,
-    warning: `could not get under ${formatFileSize(maxBytes)}; try resizing the image first`,
-  };
-}
 
 const compressCommand = new Command();
 
@@ -55,7 +30,7 @@ addOutputOptions(
     .arguments('<inputs...>')
     .option(
       '-q, --quality <value>',
-      `Set the quality of the compressed image between 1-100 (default is ${DEFAULT_QUALITY})`
+      `Set the quality of the compressed image between 1-100 (default is ${DEFAULT_QUALITY}, or your saved setting)`
     )
     .option(
       '-s, --max-size <size>',
@@ -69,30 +44,34 @@ addOutputOptions(
       options.maxSize === undefined ? undefined : parseFileSize(options.maxSize);
 
     await runBatch(inputs, options, async (file) => {
-      const format = formatFromExtension(file.path);
+      const format = outputFormatFor(file.path);
       const output = resolveOutputPath(file, {
         ...options,
         defaultSuffix: 'compressed',
+        ext: outputExtensionFor(file.path),
       });
 
       if (maxBytes === undefined) {
-        const used = quality ?? DEFAULT_QUALITY;
-        await saveImage(await encode(file, format, used, options), output);
+        const used = quality ?? loadConfig().quality ?? DEFAULT_QUALITY;
+        const image = applyFormat(await openImage(file.path, options), format, used);
+        await saveImage(image, output);
         return { output, note: `quality ${used}` };
       }
 
-      if (format === 'gif') {
-        throw new Error('--max-size is not supported for gif images');
-      }
-      const result = await compressToSize(
-        file,
+      const result = await encodeToSize(
+        () => openImage(file.path, options),
         format,
         maxBytes,
-        quality ?? MAX_SIZE_QUALITY_CAP,
-        options
+        quality ?? MAX_SIZE_QUALITY_CAP
       );
       await saveImage(result.buffer, output);
-      return { output, note: `quality ${result.quality}`, warning: result.warning };
+      return {
+        output,
+        note: `quality ${result.quality}`,
+        warning: result.tooBig
+          ? `could not get under ${formatFileSize(maxBytes)}; try resizing the image first`
+          : undefined,
+      };
     });
   })
   // help option for subcommand compress
