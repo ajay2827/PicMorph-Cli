@@ -9,6 +9,12 @@ import infoCommand from './commands/get_info.js';
 import blackAndWhiteCommand from './commands/gray.js';
 import removeBackgroundCommand from './commands/removeBackground.js';
 import resizeCommand from './commands/resize.js';
+import optimizeCommand from './commands/optimize.js';
+import cropCommand from './commands/crop.js';
+import rotateCommand from './commands/rotate.js';
+import watermarkCommand from './commands/watermark.js';
+import thumbnailCommand from './commands/thumbnail.js';
+import faviconCommand from './commands/favicon.js';
 import configCommand from './commands/config.js';
 import { logError } from './utils/colorFormatOutput.js';
 
@@ -19,18 +25,24 @@ async function picMorphCmd() {
   commander
     .name('pic-morph')
     .description(
-      'Ultimate Image CLI: Compress, Resize, Convert, Remove Backgrounds, and Apply Grayscale Filters.'
+      'Ultimate Image CLI: optimize, compress, resize, convert, crop, watermark and more.'
     )
     .version(version)
     .showHelpAfterError();
 
   // add imported module commands
+  commander.addCommand(optimizeCommand);
   commander.addCommand(compressCommand);
+  commander.addCommand(resizeCommand);
   commander.addCommand(convertCommand);
-  commander.addCommand(infoCommand);
+  commander.addCommand(cropCommand);
+  commander.addCommand(rotateCommand);
+  commander.addCommand(watermarkCommand);
+  commander.addCommand(thumbnailCommand);
   commander.addCommand(blackAndWhiteCommand);
   commander.addCommand(removeBackgroundCommand);
-  commander.addCommand(resizeCommand);
+  commander.addCommand(faviconCommand);
+  commander.addCommand(infoCommand);
   commander.addCommand(configCommand);
 
   try {

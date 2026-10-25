@@ -56,7 +56,7 @@ async function loadHeic(path) {
  * don't come out sideways. Metadata is dropped unless keepMetadata is set.
  */
 export async function openImage(path, { keepMetadata = false } = {}) {
-  const image = isHeic(path) ? await loadHeic(path) : sharp(path).rotate();
+  const image = isHeic(path) ? await loadHeic(path) : sharp(path).autoOrient();
   return keepMetadata ? image.keepMetadata() : image;
 }
 
@@ -158,3 +158,12 @@ export function parsePosition(value) {
 // keep the input's format; HEIC is written as jpeg since it can't be encoded
 export const matchInputFormat = (image, path) =>
   isHeic(path) ? applyFormat(image, 'jpeg', 90) : image;
+
+// width and height as displayed, after EXIF rotation
+export async function uprightSize(image) {
+  const metadata = await image.metadata();
+  return metadata.autoOrient ?? { width: metadata.width, height: metadata.height };
+}
+
+// file extension for an output format
+export const extensionFor = (format) => (format === 'jpeg' ? '.jpg' : `.${format}`);
