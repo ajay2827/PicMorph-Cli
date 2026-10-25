@@ -1,0 +1,33 @@
+# Publishes to npm when a GitHub release is published.
+# Uses npm trusted publishing (no token): set it up once on npmjs.com under
+# pic-morph → Settings → Trusted publishing → GitHub Actions, with
+# repository ajay2827/PicMorph-Cli and workflow publish.yml.
+name: Publish
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+      - run: npm ci
+      - run: npm run check
+      - name: Check the release tag matches package.json
+        run: |
+          VERSION="v$(node -p "require('./package.json').version")"
+          if [ "$VERSION" != "${GITHUB_REF_NAME}" ]; then
+            echo "Release tag ${GITHUB_REF_NAME} does not match package.json version $VERSION"
+            exit 1
+          fi
+      - run: npm publish

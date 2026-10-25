@@ -1,81 +1,345 @@
 # pic-morph
 
 [![npm version](https://img.shields.io/npm/v/pic-morph.svg)](https://www.npmjs.com/package/pic-morph)
+[![CI](https://github.com/ajay2827/PicMorph-Cli/actions/workflows/ci.yml/badge.svg)](https://github.com/ajay2827/PicMorph-Cli/actions/workflows/ci.yml)
+[![node](https://img.shields.io/node/v/pic-morph.svg)](https://nodejs.org)
+[![license](https://img.shields.io/npm/l/pic-morph.svg)](LICENSE)
 
-An npm package to manipulate images using the command line interface.
+**The right image for the job, in one command.**
+Web-ready, email-ready or under any size limit. Process whole folders at once, watch a folder and forget about it, or cut out backgrounds for free on your own computer.
 
-## Installation
-
-To install pic-morph globally, use the following command:
-
+```sh
 npm install -g pic-morph
+```
 
-## Features
+Requires Node.js 20.9 or newer.
 
-pic-morph provides powerful image manipulation capabilities directly from your terminal:
+## Why pic-morph
 
-- Compression: Reduce image file size while maintaining quality.
-- Conversion: Convert images between different formats.
-- Background Removal: Remove the background from images using remove.bg API.
-- Grayscale Conversion: Convert images to grayscale.
-- Image Information: Retrieve detailed information about an image.
+### 🎯 Say where the image is going, get the right file
+
+Phone photos are huge. A website, an email and a link preview each need a different size, format and compression, and most people don't know which. With `optimize`, you name the destination and pic-morph picks the rest.
+
+```sh
+pic-morph optimize photo.png -p web     # for a website
+pic-morph optimize photo.png -p email   # to attach to an email
+pic-morph optimize photo.png -p og      # for a link preview (WhatsApp, LinkedIn, Slack)
+```
+
+```
+✔ photo.png → photo_optimized.webp  1.91 MB → 71.26 KB (-96%), webp quality 75
+```
+
+![A 1.91 MB portrait optimized to a 71 KB WebP, and a boat photo turned into a 1200×630 link preview, both looking the same as the originals](docs/images/optimize.jpg)
+
+[See all presets →](#optimize)
+
+### 📏 Fit any upload limit, with the best quality possible
+
+*"Photo must be less than 200 KB."* Job applications, visa forms, exam portals and CMS uploads all ask for it. Instead of compressing again and again on a random website, give pic-morph the limit, and it finds the highest quality that still fits.
+
+```sh
+pic-morph compress photo.jpg --max-size 200kb
+```
+
+```
+✔ photo.jpg → photo_compressed.jpg  1.82 MB → 193.87 KB (-90%), quality 38
+```
+
+![A 1.82 MB phone photo compressed to 194 KB, just under the 200 KB limit, with no visible difference](docs/images/max-size.jpg)
+
+[More about compress →](#compress)
+
+### 👀 Watch a folder and forget about it
+
+Screenshots, phone exports, upload folders: images that keep arriving. Start `watch` once, and every new image dropped into the folder is optimized automatically.
+
+```sh
+pic-morph watch ~/Desktop/screenshots -o ~/Desktop/optimized
+```
+
+```
+Watching screenshots → optimized (preset web). Press Ctrl+C to stop.
+✔ screenshots/screenshot-1.png → optimized/screenshot-1.webp  1.91 MB → 71.26 KB (-96%), webp quality 75
+✔ screenshots/screenshot-2.png → optimized/screenshot-2.webp  1.06 MB → 63.95 KB (-94%), webp quality 75
+```
+
+![Three images dropped into a watched folder (1.91 MB, 1.06 MB and 113 KB) and the optimized WebP files that came out (71 KB, 64 KB and 47 KB)](docs/images/watch.jpg)
+
+[More about watch →](#watch)
+
+### ✂️ Remove backgrounds on your computer, for free
+
+No account, no upload, no API key. pic-morph picks the method for each photo: its own fast algorithm for plain and studio backgrounds, and an AI model for busy ones like people outdoors (after a one-time `pic-morph ai setup`).
+
+```sh
+pic-morph remove-bg photo.jpg
+pic-morph remove-bg product.jpg --background white --crop
+```
+
+![Background removal results: a portrait and a boat cut out of busy sunset photos with the AI method, and a product with a soft shadow, a studio portrait and a green-screen shot cut out with the plain method](docs/images/remove-bg.jpg)
+
+[More about remove-bg →](#remove-bg)
+
+## Built to be safe to use
+
+- **Whole folders at once:** files, folders (`-r` for sub folders) and glob patterns, with progress and before/after sizes.
+- **Never overwrites your files** unless you pass `--overwrite`.
+- **Private by default:** GPS location and camera details are removed from outputs unless you pass `--keep-metadata`.
+- **iPhone photos just work:** HEIC photos are read by every command, and sideways phone photos are rotated upright.
+- **Script friendly:** exits with code 1 if anything fails, so it can be used in scripts and CI.
+
+## Everything else it does
+
+Resize, convert (JPEG, PNG, WebP, AVIF, TIFF, GIF), crop (including smart crop), rotate and flip, watermark with text or a logo, thumbnails, grayscale, background removal (free and offline, with AI for busy photos), full favicon sets and photo details (camera, date, GPS). See all commands below.
 
 ## Commands
 
-### Image Compression
+| Command | What it does |
+| --- | --- |
+| [`optimize`](#optimize) | Resize, compress and convert in one step using a preset |
+| [`compress`](#compress) | Compress images, keeping their format |
+| [`resize`](#resize) | Resize images |
+| [`convert`](#convert) | Convert images to another format |
+| [`crop`](#crop) | Crop to an aspect ratio or an exact area |
+| [`rotate`](#rotate) | Rotate or flip images |
+| [`watermark`](#watermark) | Add a text or logo watermark |
+| [`thumbnail`](#thumbnail) | Make small preview images |
+| [`gray`](#gray) | Convert images to black and white |
+| [`remove-bg`](#remove-bg) | Remove the background, on your computer for free (AI for busy photos) |
+| [`favicon`](#favicon) | Create a full favicon set from one image |
+| [`info`](#info) | Show image and photo details |
+| [`watch`](#watch) | Optimize every image added to a folder |
+| [`config`](#config) | Save settings like your API key and default quality |
+| [`ai`](#remove-bg) | Set up the optional AI engine for busy backgrounds |
 
-Compress an image with optional quality adjustment.
+Run `pic-morph <command> --help` for all options of a command.
 
-pic-morph compress <input_file> [-q <quality>]
+### Choosing input files
 
-- Example:
-  pic-morph compress myimage.jpg
-  pic-morph compress myimage.jpg -q 80
+`<inputs...>` can be any mix of files, folders and glob patterns:
 
-### Image Conversion
+```sh
+pic-morph compress photo.jpg logo.png
+pic-morph compress photos/            # images directly in photos/
+pic-morph compress photos/ -r         # include sub folders
+pic-morph compress "photos/**/*.png"  # glob (quote it so your shell doesn't expand it)
+```
 
-Convert an image from one format to another.
+### Choosing where output goes
 
-pic-morph convert <input_file.extension> <output_file.extension>
+By default, results are written next to the input with a suffix (`photo_compressed.jpg`), and existing files are never overwritten (`photo_compressed_(1).jpg`).
 
-- Example:
-  pic-morph convert myimage.jpg myimage.png
+| Option | Effect |
+| --- | --- |
+| `-o, --out-dir <dir>` | Write results to this folder with the original names, keeping the sub folder structure |
+| `--suffix <text>` | Use your own suffix, e.g. `--suffix small` gives `photo_small.jpg` |
+| `--overwrite` | Replace existing files, including the originals when names match |
+| `--keep-metadata` | Keep EXIF/GPS and other metadata, which is removed by default |
 
-### Remove Background
+### optimize
 
-Remove the background from an image.
+Resize, compress and convert in one step. Images are never enlarged.
 
-pic-morph remove-bg <input_file>
+| Preset | For | Result |
+| --- | --- | --- |
+| `web` (default) | websites | fits in 1920x1920, WebP quality 75 |
+| `email` | attachments | fits in 1280x1280, JPEG under 500 KB |
+| `social` | social media posts | 1080 px wide, JPEG quality 85 |
+| `og` | link previews (Open Graph) | 1200x630 cropped to the interesting part, JPEG under 300 KB |
 
-- Example:
-  pic-morph remove-bg myimage.jpg
+```sh
+pic-morph optimize photo.jpg
+pic-morph optimize photos/ -r -p email -o to-send/
+pic-morph optimize hero.png -p og
+pic-morph optimize photos/ --to avif -q 50   # override the preset's format and quality
+```
 
-### Convert to Grayscale
+### compress
 
-Convert an image to grayscale.
+Compress with a quality from 1 to 100 (default 60, or your saved setting), or let pic-morph find the best quality that fits a size.
 
-pic-morph gray <input_file>
+```sh
+pic-morph compress myimage.jpg
+pic-morph compress myimage.jpg -q 80
+pic-morph compress myimage.jpg --max-size 200kb
+pic-morph compress photos/ -r -o compressed/
+```
 
-- Example:
-  pic-morph gray myimage.jpg
+### resize
 
-### Get Image Information
+Give a width, a height, or both. With one side only, the aspect ratio is kept.
 
-Retrieve detailed information about an image.
+```sh
+pic-morph resize myimage.jpg -w 800
+pic-morph resize avatar.png -w 256 -h 256 --fit cover
+pic-morph resize photos/ -w 1920 --no-enlarge -o web/
+```
 
-pic-morph info <input_file>
+`--fit` decides how both sides are used: `inside` (default, fit within the box), `cover` (fill the box and crop), `contain` (fit and pad), `fill` (stretch) or `outside`. `--no-enlarge` never makes small images bigger.
 
-- Example:
-  pic-morph info myimage.jpg
+### convert
+
+Convert to `jpg`, `png`, `webp`, `avif`, `tiff` or `gif`. HEIC photos can be read but not written. Images already in the target format are skipped.
+
+```sh
+pic-morph convert myimage.png --to webp
+pic-morph convert iphone-photos/ --to jpg -o converted/
+pic-morph convert photos/ -r --to avif -q 50 -o avif/
+pic-morph convert myimage.jpg myimage.png   # single file, choosing the output name
+```
+
+### crop
+
+```sh
+pic-morph crop photo.jpg --aspect 1:1                        # largest centered square
+pic-morph crop photo.jpg --aspect 16:9 --smart               # keep the most interesting part
+pic-morph crop photo.jpg -w 800 -h 600 --position top
+pic-morph crop screenshot.png -w 500 -h 300 --left 40 --top 120
+```
+
+Positions: `top-left`, `top`, `top-right`, `left`, `center`, `right`, `bottom-left`, `bottom`, `bottom-right`.
+
+### rotate
+
+```sh
+pic-morph rotate photo.jpg -a 90
+pic-morph rotate scan.png -a -2 --background white   # straighten a scan
+pic-morph rotate selfie.jpg --flip horizontal
+```
+
+### watermark
+
+```sh
+pic-morph watermark photo.jpg --text "© Ajay Singh"
+pic-morph watermark photos/ --image logo.png --position top-left --size 15 -o marked/
+pic-morph watermark draft.jpg --text DRAFT --position center --size 60 --opacity 0.3
+```
+
+`--size` is the watermark width as a % of the image width (default 25), `--opacity` goes from 0 to 1 (default 0.6), `--margin` is the space from the edges (default 3%), and `--color` sets the text color. Text gets a soft outline so it stays readable on light and dark parts of a photo; `--no-shadow` turns it off.
+
+### thumbnail
+
+```sh
+pic-morph thumbnail photos/ -o thumbs/          # longest side 256 px
+pic-morph thumbnail avatar.jpg -s 128 --square  # square, cropped to the interesting part
+```
+
+### gray
+
+```sh
+pic-morph gray myimage.jpg
+pic-morph gray photos/ -o bw/
+```
+
+### remove-bg
+
+Remove the background from images. The result is a transparent `.png`. Everything runs **on your computer, for free**, with no account.
+
+pic-morph picks the right method for each photo (`--method auto`):
+
+| Background | Method | Speed | Setup |
+| --- | --- | --- | --- |
+| Plain or studio (products, logos, ID photos, documents, green screens) | `plain`: pic-morph's own color-based algorithm, removes soft shadows too | instant | none |
+| Busy (a person in a park, a street, a room) | `ai`: the U²-Netp AI model, with edges refined to follow the real outlines | well under a second | `pic-morph ai setup` once |
+
+```sh
+pic-morph remove-bg product.jpg
+pic-morph remove-bg products/ -o cutouts/
+pic-morph remove-bg id-photo.jpg --background white   # passport-style white background
+pic-morph remove-bg logo.png --holes --crop           # clear the inside of letters, trim
+pic-morph remove-bg street-photo.jpg --method ai      # force the AI model
+```
+
+**Set up AI once** for busy backgrounds. It downloads the AI engine ([onnxruntime](https://onnxruntime.ai)) and the [U²-Net](https://github.com/xuebinqin/U-2-Net) model, about 300 MB in total, into a cache folder; pic-morph itself stays small.
+
+```sh
+pic-morph ai setup     # one time
+pic-morph ai status
+pic-morph ai remove    # delete it again
+```
+
+Without it, busy photos fall back to the plain method and pic-morph tells you how to set up AI.
+
+| Option | Effect |
+| --- | --- |
+| `-m, --method <name>` | `auto` (default), `plain` or `ai` |
+| `--background <color>` | Fill the background with a color (`white`, `#1e90ff`) instead of making it transparent |
+| `--crop` | Trim the empty space around the subject |
+| `--holes` | Plain method: also clear background-colored areas enclosed by the subject, like the inside of letters or a mug handle |
+| `--keep-shadows` | Plain method: keep soft shadows as part of the subject |
+| `--tolerance <1-100>` | Plain method: how different a color can be and still count as background (automatic by default) |
+| `--feather <px>` | Edge softness (default 1) |
+
+**With remove.bg (`--api`).** The [remove.bg](https://www.remove.bg/api) service gives the most precise edges on hair and fur. Get an API key and save it once:
+
+```sh
+pic-morph config set removeBgKey your_api_key
+pic-morph remove-bg portrait.jpg --api
+```
+
+When a key is saved (or `REMOVE_BG_API_KEY` is set), remove.bg is used by default; pass `--local` to stay on your computer.
+
+### favicon
+
+Create `favicon.ico`, PNG icons, the Apple touch icon, Android icons and `site.webmanifest`, and print the HTML to paste into your `<head>`.
+
+```sh
+pic-morph favicon logo.png                          # writes to ./favicon
+pic-morph favicon logo.svg -o public/ --name "My Site"
+```
+
+Use a square image of at least 512x512 for the sharpest icons.
+
+### info
+
+Shows format, size, dimensions, color space, transparency and DPI, plus camera, lens, date taken, exposure and GPS location for photos.
+
+```sh
+pic-morph info photo.jpg
+pic-morph info photos/ --json
+```
+
+### watch
+
+Optimize every image added to (or changed in) a folder, using an [optimize](#optimize) preset. Handy for screenshots, exports or upload folders.
+
+```sh
+pic-morph watch ~/Desktop/screenshots -o ~/Desktop/optimized
+pic-morph watch uploads/ -r -o public/images -p web --existing
+```
+
+`--existing` processes the images already in the folder first. Press Ctrl+C to stop.
+
+### config
+
+```sh
+pic-morph config set removeBgKey your_api_key
+pic-morph config set quality 75       # default for compress
+pic-morph config set preset email     # default for optimize and watch
+pic-morph config list
+pic-morph config unset quality
+pic-morph config path                 # where settings are saved
+```
+
+## Upgrading from 1.x
+
+- `convert` now takes `--to <format>` so it can work on many files. The old `pic-morph convert input.jpg output.png` form still works.
+- Commands exit with code 1 when a file fails.
+- `remove-bg` always writes a `.png` file, and runs locally (plain method, or AI after `pic-morph ai setup`) unless a remove.bg key is set or `--api` is passed.
+- Metadata is removed from outputs unless you pass `--keep-metadata`, and images are rotated upright.
+- Node.js 20.9 or newer is required.
+
+See the [changelog](CHANGELOG.md) for everything new.
 
 ## Contributing
 
-Contributions are welcome! Please follow our Contribution Guidelines to get started.
+Contributions are welcome! Please follow our [Contribution Guidelines](CONTRIBUTE.md) to get started.
 
 ## License
 
-This project is licensed under the ISC License - see the LICENSE file for details.
+This project is licensed under the ISC License - see the [LICENSE](LICENSE) file for details.
 
 ## Contact
 
-If you have any questions or suggestions, feel free to reach out to me on Linkedin.
+If you have any questions or suggestions, feel free to reach out to me on [LinkedIn](https://www.linkedin.com/in/ajay-singh27/).
