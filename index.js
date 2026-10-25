@@ -15,6 +15,7 @@ import rotateCommand from './commands/rotate.js';
 import watermarkCommand from './commands/watermark.js';
 import thumbnailCommand from './commands/thumbnail.js';
 import faviconCommand from './commands/favicon.js';
+import watchCommand from './commands/watch.js';
 import configCommand from './commands/config.js';
 import { logError } from './utils/colorFormatOutput.js';
 
@@ -43,6 +44,7 @@ async function picMorphCmd() {
   commander.addCommand(removeBackgroundCommand);
   commander.addCommand(faviconCommand);
   commander.addCommand(infoCommand);
+  commander.addCommand(watchCommand);
   commander.addCommand(configCommand);
 
   try {

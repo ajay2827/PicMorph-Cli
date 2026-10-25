@@ -43,16 +43,20 @@ function commonDir(paths) {
 /**
  * Expand files, folders and glob patterns into a list of images.
  * Each entry keeps the folder it was found under (root), so --out-dir can
- * mirror the input folder structure.
+ * mirror the input folder structure. Images inside `exclude` (the output
+ * folder) are left out of folder and glob matches, so outputs aren't
+ * processed again.
  * @returns {{ files: {path: string, root: string}[], missing: string[] }}
  */
-export async function expandInputs(inputs, { recursive = false } = {}) {
+export async function expandInputs(inputs, { recursive = false, exclude } = {}) {
   const files = [];
   const missing = [];
   const seen = new Set();
 
-  const add = (paths, root) => {
+  const excluded = (path) => exclude && (path + sep).startsWith(exclude + sep);
+  const add = (paths, root, { explicit = false } = {}) => {
     for (const path of paths.map((p) => resolve(p)).sort()) {
+      if (!explicit && excluded(path)) continue;
       if (!seen.has(path)) {
         seen.add(path);
         files.push({ path, root });
@@ -70,7 +74,7 @@ export async function expandInputs(inputs, { recursive = false } = {}) {
       });
       add(matches, resolve(input));
     } else if (existsSync(input)) {
-      add([input], dirname(resolve(input)));
+      add([input], dirname(resolve(input)), { explicit: true });
     } else if (fg.isDynamicPattern(toGlob(input))) {
       const matches = (await fg(toGlob(input), { absolute: true })).filter(isImage);
       if (matches.length) add(matches, commonDir(matches.map((m) => resolve(m))));

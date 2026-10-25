@@ -1,10 +1,11 @@
 import { statSync } from 'fs';
+import { resolve } from 'path';
 import { displayPath, expandInputs, formatFileSize } from './files.js';
 import { logError, logSuccess, logWarn } from './colorFormatOutput.js';
 
 const sizeOf = (path) => statSync(path).size;
 
-function sizeChange(before, after) {
+export function sizeChange(before, after) {
   const percent = before ? Math.round(((after - before) / before) * 100) : 0;
   const sign = percent > 0 ? '+' : '';
   return `${formatFileSize(before)} → ${formatFileSize(after)} (${sign}${percent}%)`;
@@ -16,7 +17,10 @@ function sizeChange(before, after) {
  * Sets a non-zero exit code if any file failed.
  */
 export async function runBatch(inputs, options, processFile) {
-  const { files, missing } = await expandInputs(inputs, options);
+  const { files, missing } = await expandInputs(inputs, {
+    recursive: options.recursive,
+    exclude: options.outDir && resolve(options.outDir),
+  });
 
   for (const input of missing) {
     logError(`✖ ${input}: file not found (or no images matched)`);
