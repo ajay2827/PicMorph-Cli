@@ -8,7 +8,7 @@
 - `resize`: by width, height or both, with `--fit` modes and `--no-enlarge`.
 - `crop`: to an aspect ratio (optionally `--smart`) or an exact area.
 - `rotate`: any angle, plus horizontal/vertical flip.
-- `watermark`: text or logo, with position, size, opacity and margin.
+- `watermark`: text or logo, with position, size, opacity and margin; text gets a soft outline to stay readable on any background (`--no-shadow` to turn off).
 - `thumbnail`: small previews, optionally square.
 - `favicon`: a full favicon set with `site.webmanifest` and the HTML to paste.
 - `watch`: optimize every image added to a folder.
@@ -19,6 +19,8 @@
 - `remove-bg` now works on your computer for free, with no API key: pic-morph's own algorithm learns the background colors from the image border, follows them in from the edges without crossing the subject's outline, removes soft shadows and cleans the edges. Best for plain and studio backgrounds; warns when a background is too busy.
 - New options: `--background <color>`, `--crop`, `--holes`, `--keep-shadows`, `--tolerance`, `--feather`.
 - `--api` uses remove.bg (the default when a key is saved), `--local` forces the local engine.
+- Busy backgrounds use the U²-Netp AI model on your computer after a one-time `pic-morph ai setup` (about 300 MB, kept outside the package); a guided filter snaps its mask to the real edges. `--method auto|plain|ai` chooses, `auto` by default.
+- `pic-morph ai setup|status|remove` manages the AI engine.
 
 ### Improvements
 

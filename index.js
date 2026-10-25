@@ -17,6 +17,7 @@ import thumbnailCommand from './commands/thumbnail.js';
 import faviconCommand from './commands/favicon.js';
 import watchCommand from './commands/watch.js';
 import configCommand from './commands/config.js';
+import aiCommand from './commands/ai.js';
 import { logError } from './utils/colorFormatOutput.js';
 
 const { version } = createRequire(import.meta.url)('./package.json');
@@ -46,6 +47,7 @@ async function picMorphCmd() {
   commander.addCommand(infoCommand);
   commander.addCommand(watchCommand);
   commander.addCommand(configCommand);
+  commander.addCommand(aiCommand);
 
   try {
     // Parse command-line arguments

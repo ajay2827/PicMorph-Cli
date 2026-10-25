@@ -26,7 +26,7 @@ function noise(width, height) {
   return sharp(pixels, { raw: { width, height, channels: 3 } });
 }
 
-function run(...args) {
+function runWith(env, ...args) {
   const result = spawnSync(process.execPath, [CLI, ...args], {
     cwd: dir,
     encoding: 'utf8',
@@ -35,10 +35,18 @@ function run(...args) {
       FORCE_COLOR: '0',
       REMOVE_BG_API_KEY: '',
       PIC_MORPH_CONFIG: join(dir, 'config.json'),
+      // no AI engine unless a test points at one
+      PIC_MORPH_AI_DIR: join(dir, 'no-ai'),
+      ...env,
     },
   });
   return { code: result.status, out: result.stdout + result.stderr };
 }
+
+const run = (...args) => runWith({}, ...args);
+
+// set PIC_MORPH_TEST_AI_DIR to an installed AI engine folder to run the AI tests
+const TEST_AI_DIR = process.env.PIC_MORPH_TEST_AI_DIR;
 
 const at = (...parts) => join(dir, ...parts);
 const meta = (...parts) => sharp(at(...parts)).metadata();
@@ -430,8 +438,92 @@ test('remove-bg --background fills and --crop trims', async () => {
   assert.equal(run('remove-bg', 'studio.jpg', '--background', 'notacolor').code, 1);
 });
 
-test('remove-bg warns about busy backgrounds', () => {
+test('remove-bg on a busy background without AI falls back and explains', () => {
   const { code, out } = run('remove-bg', 'photos/a.jpg', '--local');
   assert.equal(code, 0);
   assert.match(out, /background looks busy/);
+  assert.match(out, /pic-morph ai setup/);
+});
+
+test('remove-bg --method ai without the engine fails with setup steps', () => {
+  const { code, out } = run('remove-bg', 'photos/a.jpg', '--method', 'ai');
+  assert.equal(code, 1);
+  assert.match(out, /pic-morph ai setup/);
+  assert.equal(run('remove-bg', 'photos/a.jpg', '--method', 'magic').code, 1);
+});
+
+test('ai status reports a missing engine', () => {
+  const { code, out } = run('ai', 'status');
+  assert.equal(code, 0);
+  assert.match(out, /Engine: not installed/);
+  assert.match(out, /Model: {2}not downloaded/);
+});
+
+test(
+  'remove-bg uses AI for busy backgrounds when set up',
+  { skip: !TEST_AI_DIR },
+  async () => {
+    // a sharp subject in front of a noisy, colorful backdrop
+    await sharp({
+      create: { width: 320, height: 320, channels: 3, background: '#557a3a' },
+    })
+      .composite([
+        { input: await noise(320, 320).png().toBuffer(), blend: 'overlay' },
+        {
+          input: Buffer.from(
+            '<svg xmlns="http://www.w3.org/2000/svg" width="320" height="320"><circle cx="160" cy="170" r="90" fill="#d35400"/></svg>'
+          ),
+        },
+      ])
+      .jpeg()
+      .toFile(at('busy.jpg'));
+    const { code, out } = runWith(
+      { PIC_MORPH_AI_DIR: TEST_AI_DIR },
+      'remove-bg',
+      'busy.jpg'
+    );
+    assert.equal(code, 0, out);
+    assert.match(out, /local AI/);
+    assert.ok((await alphaAt('busy_no-bg.png', 160, 170)) > 200);
+    assert.ok((await alphaAt('busy_no-bg.png', 5, 5)) < 50);
+  }
+);
+
+test('watermark text has a shadow unless --no-shadow', async () => {
+  await sharp({ create: { width: 400, height: 300, channels: 3, background: '#ffffff' } })
+    .jpeg()
+    .toFile(at('white.jpg'));
+  run(
+    'watermark',
+    'white.jpg',
+    '--text',
+    'HELLO',
+    '--position',
+    'center',
+    '--opacity',
+    '1'
+  );
+  run(
+    'watermark',
+    'white.jpg',
+    '--text',
+    'HELLO',
+    '--position',
+    'center',
+    '--opacity',
+    '1',
+    '--no-shadow',
+    '--suffix',
+    'plain'
+  );
+  const darkest = async (file) => {
+    const { data } = await sharp(at(file))
+      .greyscale()
+      .raw()
+      .toBuffer({ resolveWithObject: true });
+    return Math.min(...data);
+  };
+  // white text on white is invisible without a shadow, visible with one
+  assert.ok((await darkest('white_watermarked.jpg')) < 140);
+  assert.ok((await darkest('white_plain.jpg')) > 200);
 });

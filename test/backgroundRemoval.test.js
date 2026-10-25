@@ -4,8 +4,10 @@ import {
   boxBlur,
   cropPixels,
   findSubject,
+  guidedFilter,
   parseColor,
   resizeBilinear,
+  stretch,
   subjectBounds,
 } from '../utils/backgroundRemoval.js';
 
@@ -101,4 +103,57 @@ test('parseColor', () => {
   assert.deepEqual(parseColor('#1e90ff'), [30, 144, 255]);
   assert.deepEqual(parseColor('#fff'), [255, 255, 255]);
   assert.throws(() => parseColor('nope'));
+});
+
+test('boxBlur matches a plain average, whatever the radius', () => {
+  const values = Float32Array.from({ length: 7 * 5 }, (_, i) => (i * 37) % 11);
+  const naive = (radius) => {
+    const at = (x, y) => values[y * 7 + x];
+    const horizontal = new Float32Array(35);
+    for (let y = 0; y < 5; y++)
+      for (let x = 0; x < 7; x++) {
+        let sum = 0;
+        let n = 0;
+        for (let o = Math.max(0, x - radius); o <= Math.min(6, x + radius); o++, n++)
+          sum += at(o, y);
+        horizontal[y * 7 + x] = sum / n;
+      }
+    const out = new Float32Array(35);
+    for (let x = 0; x < 7; x++)
+      for (let y = 0; y < 5; y++) {
+        let sum = 0;
+        let n = 0;
+        for (let o = Math.max(0, y - radius); o <= Math.min(4, y + radius); o++, n++)
+          sum += horizontal[o * 7 + x];
+        out[y * 7 + x] = sum / n;
+      }
+    return out;
+  };
+  for (const radius of [1, 2, 4, 9]) {
+    const fast = boxBlur(values, 7, 5, radius);
+    naive(radius).forEach((v, i) => assert.ok(Math.abs(v - fast[i]) < 1e-4));
+  }
+});
+
+test('guidedFilter snaps a blurry mask to the edge in the guide', () => {
+  // guide: dark left half, light right half; mask: a soft ramp across the middle
+  const width = 40;
+  const height = 10;
+  const guide = Float32Array.from({ length: width * height }, (_, i) =>
+    i % width < 20 ? 0.1 : 0.9
+  );
+  const mask = Float32Array.from({ length: width * height }, (_, i) =>
+    Math.min(1, Math.max(0, ((i % width) - 14) / 12))
+  );
+  const out = guidedFilter(guide, mask, width, height, 4, 1e-4);
+  // closer to a clean step at x = 20 than the input ramp was
+  assert.ok(out[5 * width + 17] < mask[5 * width + 17]);
+  assert.ok(out[5 * width + 22] > mask[5 * width + 22]);
+});
+
+test('stretch maps a range to 0-1', () => {
+  assert.deepEqual(
+    [...stretch(Float32Array.from([0, 0.25, 0.5, 0.75, 1]), 0.25, 0.75)],
+    [0, 0, 0.5, 1, 1]
+  );
 });

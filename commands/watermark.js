@@ -29,12 +29,8 @@ function parseNumber(value, name, min, max) {
   return number;
 }
 
-// render the watermark once, at high resolution, as a png with transparency
-async function renderMark({ text, image, color }) {
-  if (image) {
-    return (await openImage(image)).ensureAlpha().png().toBuffer();
-  }
-  return sharp({
+const renderText = (text, color) =>
+  sharp({
     text: {
       text: `<span foreground="${escapeMarkup(color)}">${escapeMarkup(text)}</span>`,
       font: 'sans bold 48',
@@ -42,6 +38,48 @@ async function renderMark({ text, image, color }) {
       dpi: 150,
     },
   })
+    .png()
+    .toBuffer({ resolveWithObject: true });
+
+// dark text gets a light glow, light text a dark shadow
+async function shadowColorFor(color) {
+  const data = await sharp({
+    create: { width: 1, height: 1, channels: 3, background: color },
+  })
+    .raw()
+    .toBuffer();
+  const luminance = (0.299 * data[0] + 0.587 * data[1] + 0.114 * data[2]) / 255;
+  return luminance > 0.5 ? 'black' : 'white';
+}
+
+// render the watermark once, at high resolution, as a png with transparency
+async function renderMark({ text, image, color, shadow }) {
+  if (image) {
+    return (await openImage(image)).ensureAlpha().png().toBuffer();
+  }
+  const front = await renderText(text, color);
+  if (!shadow) return front.data;
+
+  // a tight shadow for a crisp outline plus a soft one for contrast on busy areas,
+  // so the text stays readable on light and dark parts of a photo
+  const back = (await renderText(text, await shadowColorFor(color))).data;
+  const pad = 16;
+  const layer = (blur, opacity) =>
+    sharp(back)
+      .extend({ top: pad, bottom: pad, left: pad, right: pad, background: '#00000000' })
+      .blur(blur)
+      .linear([1, 1, 1, opacity], [0, 0, 0, 0])
+      .png()
+      .toBuffer();
+  const [tight, soft] = await Promise.all([layer(1.5, 1), layer(6, 0.7)]);
+
+  return sharp(soft)
+    .composite([
+      // the tight shadow twice, for a solid outline
+      { input: tight, left: 0, top: 0 },
+      { input: tight, left: 0, top: 0 },
+      { input: front.data, left: pad, top: pad },
+    ])
     .png()
     .toBuffer();
 }
@@ -66,6 +104,7 @@ addOutputOptions(
     .option('--opacity <0-1>', 'how see-through it is, 0 invisible to 1 solid', '0.6')
     .option('--margin <percent>', 'space from the edges as a % of the image width', '3')
     .option('--color <color>', 'text color (name or #hex)', 'white')
+    .option('--no-shadow', 'no shadow behind the text')
 )
   .description('Add a text or logo watermark to images')
   .action(async (inputs, options) => {

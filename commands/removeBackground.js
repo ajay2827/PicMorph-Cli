@@ -7,13 +7,18 @@ import { resolveOutputPath } from '../utils/files.js';
 import { openImage, saveImage } from '../utils/image.js';
 import {
   applyAlpha,
+  boxBlur,
   cropPixels,
   fillTransparent,
   findSubject,
+  guidedFilter,
   parseColor,
   resizeBilinear,
+  stretch,
   subjectBounds,
+  toGray,
 } from '../utils/backgroundRemoval.js';
+import { AI_SETUP_HINT, MODEL, isAiReady, predictSubject } from '../utils/aiEngine.js';
 import { loadConfig } from '../utils/config.js';
 import { runBatch } from '../utils/batch.js';
 import { addOutputOptions } from '../utils/options.js';
@@ -27,6 +32,7 @@ const WORKING_SIZE = 1024;
 // (a room, trees, a street) that the local engine can't separate well
 const BUSY_SPREAD = 15;
 const BUSY_TEXTURE = 4;
+const METHODS = ['auto', 'plain', 'ai'];
 
 // remove.bg sends errors as JSON, but the response is read as binary
 function apiErrorMessage(err) {
@@ -68,15 +74,11 @@ async function removeWithApi(path, apiKey) {
   return { rgba: data, width: info.width, height: info.height, note: 'remove.bg' };
 }
 
-async function removeLocally(path, options) {
-  const full = await (
-    await openImage(path)
-  )
-    .removeAlpha()
-    .raw()
-    .toBuffer({ resolveWithObject: true });
-  const { width, height } = full.info;
-
+// read the image at full size and at working size, upright and without alpha
+async function loadPixels(path) {
+  const full = await (await openImage(path)).removeAlpha().raw().toBuffer({
+    resolveWithObject: true,
+  });
   const small = await (
     await openImage(path)
   )
@@ -89,8 +91,96 @@ async function removeLocally(path, options) {
     })
     .raw()
     .toBuffer({ resolveWithObject: true });
+  return { full, small };
+}
 
-  const result = findSubject({ data: small.data, ...small.info }, options);
+const isBusy = (result) => result.spread > BUSY_SPREAD || result.texture > BUSY_TEXTURE;
+
+// plain backgrounds: the color-based algorithm
+function plainAlpha(small, result) {
+  let warning;
+  if (isBusy(result)) {
+    warning = isAiReady()
+      ? 'the background looks busy; --method ai will do better'
+      : `the background looks busy, so the result is likely poor. ${AI_SETUP_HINT}`;
+  } else if (result.subjectShare < 0.01) {
+    warning = 'no subject found; try a lower --tolerance';
+  } else if (result.subjectShare > 0.97) {
+    warning = 'almost nothing was removed; try a higher --tolerance';
+  }
+  return {
+    alpha: result.alpha,
+    backgroundColors: result.backgroundColors,
+    note: `local, tolerance ${Math.round(result.tolerance)}`,
+    warning,
+  };
+}
+
+// busy backgrounds: the AI model finds the subject, then the guided filter
+// snaps its rough mask to the real edges in the photo
+async function aiAlpha(path, small, feather) {
+  const { width, height } = small.info;
+  const modelInput = await (
+    await openImage(path)
+  )
+    .removeAlpha()
+    .resize(MODEL.size, MODEL.size, { fit: 'fill' })
+    .raw()
+    .toBuffer();
+  const prediction = await predictSubject(modelInput);
+
+  // drop low-confidence areas (halos of sky or wall around the subject)
+  const rough = stretch(
+    resizeBilinear(prediction, MODEL.size, MODEL.size, width, height),
+    0.15,
+    0.65
+  );
+  const radius = Math.max(2, Math.round(Math.min(width, height) * 0.012));
+  const refined = guidedFilter(
+    toGray(small.data, small.info.channels),
+    rough,
+    width,
+    height,
+    radius,
+    1e-3
+  );
+  const alpha = boxBlur(
+    stretch(refined, 0.1, 0.9),
+    width,
+    height,
+    Math.max(0, feather - 1)
+  );
+
+  let share = 0;
+  for (const value of alpha) share += value;
+  share /= alpha.length;
+  return {
+    alpha,
+    // a busy background has no single color to take out of the edges
+    backgroundColors: [],
+    note: 'local AI',
+    warning: share < 0.01 ? 'no subject found' : undefined,
+  };
+}
+
+async function removeLocally(path, options) {
+  const { full, small } = await loadPixels(path);
+  const { width, height } = full.info;
+
+  // the plain analysis is fast and tells us whether the background is busy
+  const plain = findSubject({ data: small.data, ...small.info }, options);
+  const method =
+    options.method === 'auto'
+      ? isBusy(plain) && isAiReady()
+        ? 'ai'
+        : 'plain'
+      : options.method;
+
+  const result =
+    method === 'ai'
+      ? await aiAlpha(path, small, options.feather)
+      : plainAlpha(small, plain);
+
   const alpha = resizeBilinear(
     result.alpha,
     small.info.width,
@@ -103,24 +193,7 @@ async function removeLocally(path, options) {
     alpha,
     result.backgroundColors
   );
-
-  let warning;
-  if (result.spread > BUSY_SPREAD || result.texture > BUSY_TEXTURE) {
-    warning =
-      'the background looks busy, so the result is likely poor; local removal works best on plain backgrounds (try --api)';
-  } else if (result.subjectShare < 0.01) {
-    warning = 'no subject found; try a lower --tolerance';
-  } else if (result.subjectShare > 0.97) {
-    warning = 'almost nothing was removed; try a higher --tolerance';
-  }
-
-  return {
-    rgba,
-    width,
-    height,
-    note: `local, tolerance ${Math.round(result.tolerance)}`,
-    warning,
-  };
+  return { rgba, width, height, note: result.note, warning: result.warning };
 }
 
 function parseNumberOption(value, name, min, max) {
@@ -145,6 +218,11 @@ addOutputOptions(
       'remove it on this computer (default when no remove.bg key is set)'
     )
     .option('--api', 'use the remove.bg API (needs an API key)')
+    .option(
+      '-m, --method <name>',
+      'local only: auto (default), plain (fast, for plain backgrounds) or ai (busy backgrounds, needs `pic-morph ai setup`)',
+      'auto'
+    )
     .option(
       '--tolerance <1-100>',
       'local only: how different a color can be and still count as background (auto by default)'
@@ -173,11 +251,17 @@ addOutputOptions(
       );
     }
     const useApi = options.api || (!options.local && Boolean(apiKey));
+    if (!METHODS.includes(options.method)) {
+      throw new Error(`Invalid --method "${options.method}". Use ${METHODS.join(', ')}.`);
+    }
+    if (!useApi && options.method === 'ai' && !isAiReady())
+      throw new Error(AI_SETUP_HINT);
     const localOptions = {
       tolerance: parseNumberOption(options.tolerance, 'tolerance', 1, 100),
       feather: Math.round(parseNumberOption(options.feather, 'feather', 0, 20)),
       keepShadows: Boolean(options.keepShadows),
       holes: Boolean(options.holes),
+      method: options.method,
     };
     const fill =
       options.background === undefined ? undefined : parseColor(options.background);
@@ -225,15 +309,15 @@ addOutputOptions(
     logSuccess('\nExamples:');
     logSuccess('  $ pic-morph remove-bg product.jpg');
     logSuccess('  $ pic-morph remove-bg id-photo.jpg --background white');
-    logSuccess('  $ pic-morph remove-bg logo.png --crop');
-    logSuccess('  $ pic-morph remove-bg products/ -o cutouts/ --tolerance 25');
+    logSuccess('  $ pic-morph remove-bg logo.png --holes --crop');
+    logSuccess('  $ pic-morph remove-bg street-photo.jpg --method ai');
     logSuccess('  $ pic-morph remove-bg portrait.jpg --api');
     logSuccess('\nNote:');
-    logSuccess('  The local engine works on this computer for free, and works best on');
-    logSuccess('  plain or studio backgrounds (products, logos, ID photos, documents).');
     logSuccess(
-      '  For busy backgrounds such as a person in a park, use --api (remove.bg).'
+      '  Runs on this computer for free. Plain backgrounds use a fast color-based'
     );
+    logSuccess('  method; busy ones (a person in a park) use AI once you run');
+    logSuccess('  `pic-morph ai setup`. --api uses the remove.bg service instead.');
   });
 
 export default removeBackgroundCommand;

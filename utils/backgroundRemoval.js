@@ -352,26 +352,95 @@ export function removeHoles(background, bgDistance, width, height, tolerance, mi
 
 // ---------- alpha ----------
 
-/** Blur a single-channel float image with a box filter, horizontally then vertically. */
+/**
+ * Blur a single-channel float image with a box filter (the average over a
+ * square window, clipped at the edges), horizontally then vertically. Uses
+ * running sums, so the cost doesn't depend on the radius.
+ */
 export function boxBlur(values, width, height, radius) {
   if (radius < 1) return values;
   const pass = (input, along, across, step, lineStep) => {
     const output = new Float32Array(input.length);
     for (let line = 0; line < across; line++) {
+      const base = line * lineStep;
+      let sum = 0;
+      // window [p - radius, p + radius] clipped to [0, along - 1]
+      for (let o = 0; o <= Math.min(along - 1, radius); o++)
+        sum += input[base + o * step];
       for (let p = 0; p < along; p++) {
-        let sum = 0;
-        let n = 0;
-        for (let o = Math.max(0, p - radius); o <= Math.min(along - 1, p + radius); o++) {
-          sum += input[line * lineStep + o * step];
-          n++;
-        }
-        output[line * lineStep + p * step] = sum / n;
+        const first = Math.max(0, p - radius);
+        const last = Math.min(along - 1, p + radius);
+        output[base + p * step] = sum / (last - first + 1);
+        if (p + radius + 1 < along) sum += input[base + (p + radius + 1) * step];
+        if (p - radius >= 0) sum -= input[base + (p - radius) * step];
       }
     }
     return output;
   };
   const horizontal = pass(values, width, height, 1, width);
   return pass(horizontal, height, width, width, 1);
+}
+
+/**
+ * Edge-aware smoothing of a mask (He et al., "Guided Image Filtering"): the
+ * result follows the outlines of the guide image, so a rough mask snaps to
+ * the real edges of hair, fingers and objects.
+ * @param {Float32Array} guide grayscale image, 0-1
+ * @param {Float32Array} mask rough mask, 0-1
+ */
+export function guidedFilter(guide, mask, width, height, radius, epsilon) {
+  const count = width * height;
+  const box = (values) => boxBlur(values, width, height, radius);
+  const product = (a, b) => {
+    const out = new Float32Array(count);
+    for (let i = 0; i < count; i++) out[i] = a[i] * b[i];
+    return out;
+  };
+
+  const meanI = box(guide);
+  const meanP = box(mask);
+  const corrI = box(product(guide, guide));
+  const corrIP = box(product(guide, mask));
+
+  const a = new Float32Array(count);
+  const b = new Float32Array(count);
+  for (let i = 0; i < count; i++) {
+    const variance = corrI[i] - meanI[i] * meanI[i];
+    const covariance = corrIP[i] - meanI[i] * meanP[i];
+    a[i] = covariance / (variance + epsilon);
+    b[i] = meanP[i] - a[i] * meanI[i];
+  }
+
+  const meanA = box(a);
+  const meanB = box(b);
+  const output = new Float32Array(count);
+  for (let i = 0; i < count; i++) {
+    output[i] = Math.min(1, Math.max(0, meanA[i] * guide[i] + meanB[i]));
+  }
+  return output;
+}
+
+/** Grayscale (0-1) from interleaved RGB(A) pixels. */
+export function toGray(data, channels) {
+  const count = data.length / channels;
+  const gray = new Float32Array(count);
+  for (let i = 0; i < count; i++) {
+    gray[i] =
+      (0.299 * data[i * channels] +
+        0.587 * data[i * channels + 1] +
+        0.114 * data[i * channels + 2]) /
+      255;
+  }
+  return gray;
+}
+
+/** Stretch values so `low` becomes 0 and `high` becomes 1, clamping the rest. */
+export function stretch(values, low, high) {
+  const output = new Float32Array(values.length);
+  for (let i = 0; i < values.length; i++) {
+    output[i] = Math.min(1, Math.max(0, (values[i] - low) / (high - low)));
+  }
+  return output;
 }
 
 /**
