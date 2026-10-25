@@ -72,7 +72,7 @@ Watching screenshots → optimized (preset web). Press Ctrl+C to stop.
 
 ## Everything else it does
 
-Resize, convert (JPEG, PNG, WebP, AVIF, TIFF, GIF), crop (including smart crop), rotate and flip, watermark with text or a logo, thumbnails, grayscale, background removal, full favicon sets and photo details (camera, date, GPS). See all commands below.
+Resize, convert (JPEG, PNG, WebP, AVIF, TIFF, GIF), crop (including smart crop), rotate and flip, watermark with text or a logo, thumbnails, grayscale, background removal (free and offline for plain backgrounds), full favicon sets and photo details (camera, date, GPS). See all commands below.
 
 ## Commands
 
@@ -87,7 +87,7 @@ Resize, convert (JPEG, PNG, WebP, AVIF, TIFF, GIF), crop (including smart crop),
 | [`watermark`](#watermark) | Add a text or logo watermark |
 | [`thumbnail`](#thumbnail) | Make small preview images |
 | [`gray`](#gray) | Convert images to black and white |
-| [`remove-bg`](#remove-bg) | Remove the background (remove.bg API) |
+| [`remove-bg`](#remove-bg) | Remove the background, on your computer for free or with remove.bg |
 | [`favicon`](#favicon) | Create a full favicon set from one image |
 | [`info`](#info) | Show image and photo details |
 | [`watch`](#watch) | Optimize every image added to a folder |
@@ -214,17 +214,36 @@ pic-morph gray photos/ -o bw/
 
 ### remove-bg
 
-Remove the background from images. The result is always a transparent `.png`.
+Remove the background from images. The result is a transparent `.png`.
 
-This uses the [remove.bg](https://www.remove.bg/api) API. Get an API key and save it once:
+**On your computer, free (default).** pic-morph's own background removal runs locally: no account, no internet, and it takes well under a second per photo. It works best on **plain or studio backgrounds**: product shots, logos, ID photos, documents, green screens. It removes soft shadows too.
+
+```sh
+pic-morph remove-bg product.jpg
+pic-morph remove-bg products/ -o cutouts/
+pic-morph remove-bg id-photo.jpg --background white   # passport-style white background
+pic-morph remove-bg logo.png --holes --crop           # clear the inside of letters, trim
+```
+
+| Option | Effect |
+| --- | --- |
+| `--background <color>` | Fill the background with a color (`white`, `#1e90ff`) instead of making it transparent |
+| `--crop` | Trim the empty space around the subject |
+| `--holes` | Also clear background-colored areas enclosed by the subject, like the inside of letters or a mug handle |
+| `--keep-shadows` | Keep soft shadows as part of the subject |
+| `--tolerance <1-100>` | How different a color can be and still count as background (automatic by default); raise it if background is left behind, lower it if parts of the subject disappear |
+| `--feather <px>` | Edge softness (default 1) |
+
+If the background is busy (a room, trees, a street), pic-morph warns you that the result is likely poor. For those photos, use the remove.bg API:
+
+**With remove.bg (`--api`).** Uses the [remove.bg](https://www.remove.bg/api) AI service, which handles any photo, including people with hair against busy backgrounds. Get an API key and save it once:
 
 ```sh
 pic-morph config set removeBgKey your_api_key
-pic-morph remove-bg myimage.jpg
-pic-morph remove-bg products/ -o cutouts/
+pic-morph remove-bg portrait.jpg --api
 ```
 
-You can also set `REMOVE_BG_API_KEY` in your environment or a `.env` file; it takes priority over the saved key.
+When a key is saved (or `REMOVE_BG_API_KEY` is set), remove.bg is used by default; pass `--local` to use the local engine anyway.
 
 ### favicon
 
@@ -272,7 +291,7 @@ pic-morph config path                 # where settings are saved
 
 - `convert` now takes `--to <format>` so it can work on many files. The old `pic-morph convert input.jpg output.png` form still works.
 - Commands exit with code 1 when a file fails.
-- `remove-bg` always writes a `.png` file.
+- `remove-bg` always writes a `.png` file, and runs locally unless a remove.bg key is set or `--api` is passed.
 - Metadata is removed from outputs unless you pass `--keep-metadata`, and images are rotated upright.
 - Node.js 20.9 or newer is required.
 

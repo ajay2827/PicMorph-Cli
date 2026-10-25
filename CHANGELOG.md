@@ -14,6 +14,12 @@
 - `watch`: optimize every image added to a folder.
 - `config`: save the remove.bg key, default quality and default preset.
 
+### Local background removal
+
+- `remove-bg` now works on your computer for free, with no API key: pic-morph's own algorithm learns the background colors from the image border, follows them in from the edges without crossing the subject's outline, removes soft shadows and cleans the edges. Best for plain and studio backgrounds; warns when a background is too busy.
+- New options: `--background <color>`, `--crop`, `--holes`, `--keep-shadows`, `--tolerance`, `--feather`.
+- `--api` uses remove.bg (the default when a key is saved), `--local` forces the local engine.
+
 ### Improvements
 
 - Every command accepts several files, folders (`-r` for sub folders) and glob patterns, with progress, before/after sizes and a summary.
@@ -29,7 +35,7 @@
 
 - Node.js 20.9 or newer is required.
 - Commands exit with code 1 when a file fails.
-- `remove-bg` always writes a `.png` file.
+- `remove-bg` always writes a `.png` file, and runs locally unless a remove.bg key is set or `--api` is passed.
 - Metadata is removed from outputs unless `--keep-metadata` is given.
 - The remove.bg API key is no longer built in; set your own.
 

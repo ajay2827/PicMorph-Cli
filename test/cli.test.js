@@ -174,8 +174,8 @@ test('info --json prints parseable output', () => {
   assert.equal(info[0].Width, 400);
 });
 
-test('remove-bg without an API key fails clearly', () => {
-  const { code, out } = run('remove-bg', 'photos/a.jpg');
+test('remove-bg --api without an API key fails clearly', () => {
+  const { code, out } = run('remove-bg', 'photos/a.jpg', '--api');
   assert.equal(code, 1);
   assert.match(out, /No remove.bg API key/);
 });
@@ -371,4 +371,67 @@ test('watch optimizes new images and stops cleanly', async () => {
     assert.equal(code, 0);
     assert.match(out, /Stopped watching/);
   }
+});
+
+// a studio-style shot: subject on a plain backdrop with a soft shadow,
+// touching the bottom edge like a portrait's shoulders
+const studioShot = (file) =>
+  sharp(
+    Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="300" height="240">
+      <defs><filter id="s"><feGaussianBlur stdDeviation="8"/></filter></defs>
+      <rect width="300" height="240" fill="#eeeeee"/>
+      <ellipse cx="150" cy="150" rx="90" ry="14" fill="#c8c8c8" filter="url(#s)"/>
+      <rect x="100" y="40" width="100" height="110" fill="#c0392b"/>
+      <rect x="125" y="70" width="50" height="40" fill="#eeeeee"/>
+      <rect x="40" y="200" width="220" height="40" fill="#2c3e50"/>
+    </svg>`)
+  )
+    .jpeg({ quality: 92 })
+    .toFile(at(file));
+
+const alphaAt = async (file, x, y) => {
+  const { data, info } = await sharp(at(file))
+    .ensureAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+  return data[(y * info.width + x) * 4 + 3];
+};
+
+test('remove-bg works locally without an API key', async () => {
+  await studioShot('studio.jpg');
+  const { code, out } = run('remove-bg', 'studio.jpg');
+  assert.equal(code, 0, out);
+  assert.match(out, /local/);
+  assert.equal(await alphaAt('studio_no-bg.png', 5, 5), 0); // backdrop
+  assert.equal(await alphaAt('studio_no-bg.png', 110, 50), 255); // subject
+  assert.equal(await alphaAt('studio_no-bg.png', 150, 225), 255); // touches the edge
+  assert.equal(await alphaAt('studio_no-bg.png', 60, 158), 0); // soft shadow
+  assert.equal(await alphaAt('studio_no-bg.png', 150, 90), 255); // enclosed area kept
+});
+
+test('remove-bg --holes clears enclosed background, --keep-shadows keeps shadows', async () => {
+  await studioShot('studio.jpg');
+  run('remove-bg', 'studio.jpg', '--holes', '--suffix', 'holes');
+  run('remove-bg', 'studio.jpg', '--keep-shadows', '--suffix', 'shadow');
+  assert.equal(await alphaAt('studio_holes.png', 150, 90), 0);
+  assert.ok((await alphaAt('studio_shadow.png', 150, 160)) > 0);
+});
+
+test('remove-bg --background fills and --crop trims', async () => {
+  await studioShot('studio.jpg');
+  run('remove-bg', 'studio.jpg', '--background', '#ffffff', '--crop');
+  const { width, height, hasAlpha } = await meta('studio_no-bg.png');
+  assert.ok(width < 300 && height < 240, `${width}x${height}`);
+  const { data } = await sharp(at('studio_no-bg.png'))
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+  assert.deepEqual([...data.subarray(0, 3)], [255, 255, 255]);
+  assert.ok(!hasAlpha || data[3] === 255);
+  assert.equal(run('remove-bg', 'studio.jpg', '--background', 'notacolor').code, 1);
+});
+
+test('remove-bg warns about busy backgrounds', () => {
+  const { code, out } = run('remove-bg', 'photos/a.jpg', '--local');
+  assert.equal(code, 0);
+  assert.match(out, /background looks busy/);
 });
